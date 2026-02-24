@@ -1,0 +1,5 @@
+matplotlib==3.10.7
+pandas==2.3.3
+xarray==2025.11.0
+numpy==2.3.5
+seaborn==0.13.2

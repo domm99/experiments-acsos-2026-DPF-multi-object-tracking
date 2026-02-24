@@ -1,0 +1,81 @@
+incarnation: collektive
+
+variables:
+  numberOfParticles: &numberOfParticles
+    type: ArbitraryVariable
+    parameters: [ 250, [ 50, 100, 250, 500 ] ]
+  maxInitialSpeed: &maxInitialSpeed
+    type: ArbitraryVariable
+    parameters: [ 2.0, [ 0.5, 1.0, 2.0, 5.0 ] ]
+
+_constants:
+  sideLength: &sideLength 100.0
+  measurementStdDev: &measurementStdDev 2.0
+  blindSpotDistance: &blindSpotDistance 5.0
+
+network-model:
+  type: ConnectWithinDistance
+  parameters: [200]
+
+_pool: &program
+  - time-distribution: 1
+    type: Event
+    actions:
+      - type: RunCollektiveProgram
+        parameters: [ it.unibo.collektive.BooleanSensingDPFKt.boolSensingEntrypoint]
+
+_movement: &movement
+  - time-distribution: 1
+    type: Event
+    actions:
+      - type: MoveNode
+        parameters:
+          - 0.05
+          - 0.03
+          - *sideLength
+          - 0.001
+
+deployments:
+  - type: Grid
+    parameters: [ 0, 0, *sideLength, *sideLength, 50, 50, 1, 1 ]
+    contents:
+      - molecule: Filter
+        concentration: true
+      - molecule: NumberOfParticles
+        concentration: *numberOfParticles
+      - molecule: MaxInitialSpeed
+        concentration: *maxInitialSpeed
+      - molecule: SideLength
+        concentration: *sideLength
+    programs: *program
+    properties:
+      - type: it.unibo.collektive.alchemist.device.sensors.impl.LocationSensorProperty
+        parameters: [*measurementStdDev, *blindSpotDistance ]
+
+  - type: Point
+    parameters: [ 0, 0 ]
+    contents:
+      - molecule: Movable
+        concentration: true
+    programs:
+      - *movement
+
+export:
+  - type: CSVExporter
+    parameters:
+      fileNameRoot: "track-movement-distributed-boolean"
+      interval: 1.0
+      exportPath: "data/track-movement-distributed-boolean"
+    data:
+      - time
+      - molecule: PositionX
+        aggregators: [mean]
+        value-filter: onlyFinite
+        precision: 3
+      - molecule: PositionY
+        aggregators: [mean]
+        value-filter: onlyfinite
+
+terminate:
+  type: AfterTime
+  parameters: 3000.0

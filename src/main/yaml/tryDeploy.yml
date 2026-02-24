@@ -1,0 +1,17 @@
+incarnation: collektive
+
+network-model:
+  type: ConnectWithinDistance
+  parameters: [15]
+
+deployments:
+  - type: Point
+    parameters: [ 0, 0 ]
+    contents:
+      - molecule: Movable
+        concentration: true
+  - type: Gaussian
+    parameters: [ 1000, 0, 0, 2]
+    contents:
+      - molecule: Filter
+        concentration: true

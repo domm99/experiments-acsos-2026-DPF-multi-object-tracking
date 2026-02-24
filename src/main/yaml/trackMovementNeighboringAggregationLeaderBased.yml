@@ -1,0 +1,116 @@
+incarnation: collektive
+
+_constants:
+  measurementStdDev: &measurementStdDev 2.0
+
+variables:
+  numberOfParticles: &numberOfParticles 250
+  maxInitialSpeed: &maxInitialSpeed 2.0
+  neighboringDistance: &neighboringDistance
+    type: ArbitraryVariable
+    parameters: [ 35 , [ 35, 50, 240 ] ]
+  stepLength: &stepLength 30
+  dataPath: &dataPath "data-leader"
+  size: &size 150
+  seed: &seed
+    min: 42
+    max: 42
+    step: 1
+    default: 42
+
+seeds:
+  scenario: *seed
+  simulation: *seed
+
+network-model:
+  type: ConnectWithinDistance
+  parameters: [ *neighboringDistance ]
+
+_pool: &program
+  - time-distribution: 1
+    type: Event
+    actions:
+      - type: RunCollektiveProgram
+        parameters: [ it.unibo.collektive.AggregateInformationAgentLeaderBasedKt.informationFilterEntrypointLeaderBased ]
+
+_movement: &movement
+  - time-distribution: 1
+    type: Event
+    actions:
+      - type: MoveNode
+        parameters:
+          - 0.05
+          - 0.03
+          - *size
+          - 0.001
+
+environment:
+  type: Continuous2DEnvironment
+  parameters: [ ]
+  global-programs:
+    - time-distribution:
+        type: Trigger
+        parameters: [ 1500 ]
+      type: KillLeader
+      parameters: [  ]
+
+deployments:
+  - type: Grid
+    parameters: [ 0, 0, *size, *size, *stepLength, *stepLength, 1, 1 ]
+    contents:
+      - molecule: Filter
+        concentration: true
+      - molecule: NumberOfParticles
+        concentration: *numberOfParticles
+      - molecule: MaxInitialSpeed
+        concentration: *maxInitialSpeed
+      - molecule: SideLength
+        concentration: *size
+      - molecule: isDown
+        concentration: false
+    programs: *program
+    properties:
+      - type: it.unibo.collektive.alchemist.device.sensors.impl.LocationSensorProperty
+        parameters: [ *measurementStdDev ]
+
+  - type: Point
+    parameters: [ 0, 0 ]
+    contents:
+      - molecule: Movable
+        concentration: true
+    programs:
+      - *movement
+
+launcher:
+  parameters:
+    batch: [ seed, neighboringDistance ]
+    showProgress: true
+    autoStart: true
+
+monitors:
+  - type: it.unibo.alchemist.model.monitors.ExportEstimations
+    parameters: [*seed, *neighboringDistance, *dataPath]
+  - type: it.unibo.alchemist.model.monitors.ExportSensorsDeployment
+    parameters: [*seed, *neighboringDistance, *dataPath]
+  - type: it.unibo.alchemist.model.monitors.ExportLeadersList
+    parameters: [ *seed, *neighboringDistance, *dataPath ]
+
+export:
+  - type: CSVExporter
+    parameters:
+      fileNameRoot: "real-trajectory"
+      interval: 1.0
+      exportPath: *dataPath
+    data:
+      - time
+      - molecule: PositionX
+        aggregators: [ mean ]
+        value-filter: onlyFinite
+        precision: 3
+      - molecule: PositionY
+        aggregators: [ mean ]
+        value-filter: onlyfinite
+
+terminate:
+  type: AfterTime
+  parameters: 3000.0
