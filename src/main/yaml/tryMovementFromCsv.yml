@@ -1,0 +1,29 @@
+incarnation: collektive
+
+network-model:
+  type: ConnectWithinDistance
+  parameters: [15]
+
+
+_movement: &movement
+  - time-distribution:
+      type: DiracComb
+      parameters: [ 0.1, 1 ]
+    type: Event
+    actions:
+      - type: MoveNode
+        parameters:
+          - "zebras-trajectories/flights/flight_1_zebras/zebra_038.csv"
+
+deployments:
+  - type: Point
+    parameters: [ 0, 0 ]
+    contents:
+      - molecule: Movable
+        concentration: true
+    programs:
+      - *movement
+
+terminate:
+  type: AfterTime
+  parameters: 100.0

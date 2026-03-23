@@ -1,15 +1,14 @@
 package it.unibo.alchemist
 
-import it.unibo.alchemist.model.Action
-import it.unibo.alchemist.model.Environment
+import java.io.File
 import it.unibo.alchemist.model.Node
+import it.unibo.alchemist.model.Action
 import it.unibo.alchemist.model.Reaction
+import it.unibo.alchemist.model.Environment
+import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import it.unibo.alchemist.model.actions.AbstractMoveNode
-import it.unibo.alchemist.model.molecules.SimpleMolecule
 import it.unibo.alchemist.model.positions.Euclidean2DPosition
-import java.util.Random
-import kotlin.math.max
-import kotlin.math.sqrt
+import java.io.FileNotFoundException
 
 /**
  * Represents a movement action that updates the position of a node within a Euclidean 2D environment.
@@ -18,77 +17,40 @@ import kotlin.math.sqrt
  * @param T the concentration type managed by the node
  * @param environment the simulation environment in which the node resides
  * @param node the node under movement
- * @param xVel the initial velocity of the node along the x-axis
- * @param yVel the initial velocity of the node along the y-axis
- * @param sideLength the boundary limits of the environment (assumes a square-shaped area)
- * @param accelerationFactor the acceleration factor applied to the node's movement
+ * @param movementCsvPath the path of the CSV file containing the movement trajectory
  */
 class MoveNode<T>(
     environment: Environment<T, Euclidean2DPosition>,
     node: Node<T>,
-    val xVel: Double,
-    val yVel: Double,
-    val sideLength: Double,
-    val accelerationFactor: Double,
+    val movementCsvPath: String,
 ) : AbstractMoveNode<T, Euclidean2DPosition>(environment, node, true) {
 
-    private var currentVx = xVel
-    private var currentVy = yVel
-    private var currentScalarVelocity: Double = 0.0
-    private var friction: Double = 0.97
+    private var step: Int = 0
 
     override fun getNextPosition(): Euclidean2DPosition? {
-        val currentPosition = environment.getPosition(node)
-        storePosition(currentPosition)
-        var newPosition = computeNextPosition(currentPosition)
-        newPosition = checkBoundaries(newPosition)
-        return newPosition
-    }
-
-    private fun storePosition(currentPosition: Euclidean2DPosition) {
-        val node =
-            environment.nodes.first { it.contains(SimpleMolecule("Movable")) }
-        node
-            .setConcentration(SimpleMolecule("PositionX"), currentPosition.x as T?)
-
-        node
-            .setConcentration(SimpleMolecule("PositionY"), currentPosition.y as T?)
-    }
-
-    override fun cloneAction(p0: Node<T?>?, p1: Reaction<T?>?): Action<T?>? =
-        MoveNode(environment, node, xVel, yVel, sideLength, accelerationFactor)
-
-    private fun trajectoryFunction(x: Double): Double {
-        return 0.5 * x + 5 * kotlin.math.sin(0.3 * x)
-        // x + kotlin.math.sin(x)
-    }
-
-    private fun computeNextPosition(currentPosition: Euclidean2DPosition): Euclidean2DPosition {
-        currentScalarVelocity = (currentScalarVelocity * friction) + accelerationFactor
-        val newX = currentPosition.x + currentScalarVelocity
-        val newY = trajectoryFunction(newX)
-        return Euclidean2DPosition(newX, newY)
-    }
-
-    private fun checkBoundaries(position: Euclidean2DPosition): Euclidean2DPosition {
-        var newX = position.x
-        var newY = position.y
-
-        if (newX < 0) {
-            newX = 0.0
-            currentVx = -currentVx
-        } else if (newX > sideLength) {
-            newX = sideLength
-            currentVx = -currentVx
+        val file = this::class.java.classLoader.getResourceAsStream(movementCsvPath)
+            ?: throw FileNotFoundException("Cannot find movement csv file $movementCsvPath")
+        return csvReader().open(file) {
+            val row = readAllWithHeaderAsSequence().elementAtOrNull(step)
+            if (row != null) {
+                val x = row["x"]
+                val y = row["y"]
+                if (x != null && y != null) {
+                    step += 1
+                    Euclidean2DPosition(x.toDouble(), y.toDouble())
+                } else {
+                    null
+                }
+            } else {
+                null
+            }
         }
-
-        if (newY < 0) {
-            newY = 0.0
-            currentVy = -currentVy
-        } else if (newY > sideLength) {
-            newY = sideLength
-            currentVy = -currentVy
-        }
-        return Euclidean2DPosition(newX, newY)
     }
+
+    override fun cloneAction(
+        p0: Node<T?>?,
+        p1: Reaction<T?>?
+    ): Action<T?> =
+        MoveNode(environment, node, movementCsvPath)
+
 }
