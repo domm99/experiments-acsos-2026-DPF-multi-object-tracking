@@ -21,6 +21,7 @@ sourceSets {
         dependencies {
             implementation(libs.bundles.alchemist)
             implementation(libs.bundles.collektive)
+            implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.10.0")
         }
         resources {
             srcDir("src/main/yaml")
