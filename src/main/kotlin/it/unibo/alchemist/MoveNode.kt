@@ -6,8 +6,12 @@ import it.unibo.alchemist.model.Action
 import it.unibo.alchemist.model.Reaction
 import it.unibo.alchemist.model.Environment
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
+import it.unibo.alchemist.model.TerminationPredicate
+import it.unibo.alchemist.model.Time
 import it.unibo.alchemist.model.actions.AbstractMoveNode
+import it.unibo.alchemist.model.molecules.SimpleMolecule
 import it.unibo.alchemist.model.positions.Euclidean2DPosition
+import it.unibo.alchemist.model.terminators.AfterTime
 import java.io.FileNotFoundException
 
 /**
@@ -36,6 +40,8 @@ class MoveNode<T>(
                 val x = row["x"]
                 val y = row["y"]
                 if (x != null && y != null) {
+                    node.setConcentration(SimpleMolecule("PositionX"), currentPosition.x as T?)
+                    node.setConcentration(SimpleMolecule("PositionY"), currentPosition.y as T?)
                     step += 1
                     Euclidean2DPosition(x.toDouble(), y.toDouble())
                 } else {
