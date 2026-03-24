@@ -11,4 +11,4 @@ develocity {
     }
 }
 
-rootProject.name = "experiments-ac-based-distributed-particle-filtering"
+rootProject.name = "experiments-acsos-2026-DPF-multi-object-tracking"
