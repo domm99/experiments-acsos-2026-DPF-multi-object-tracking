@@ -6,6 +6,7 @@ import it.unibo.alchemist.model.Node
 import it.unibo.alchemist.model.Time
 import it.unibo.alchemist.model.molecules.SimpleMolecule
 import it.unibo.alchemist.model.positions.Euclidean2DPosition
+import it.unibo.collektive.alchemist.device.sensors.ZebraPositionHistory
 import it.unibo.filtering.Point
 import it.unibo.filtering.Particle
 import java.io.File
@@ -14,7 +15,7 @@ import java.util.Locale
 class Line(vararg val values: Any)
 
 fun <T> hasEstimations(node: Node<T>): Boolean {
-    val e = node.getConcentration(SimpleMolecule("Estimations")) as? MutableList<Point>
+    val e = node.getConcentration(SimpleMolecule("Estimations")) as? MutableList<ZebraPositionHistory>
         ?: mutableListOf()
     return e.isNotEmpty()
 }
@@ -31,14 +32,16 @@ class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val dat
                 .filter { hasEstimations(it) }
 
             filters.forEach { filter ->
-                val estimations = filter.getConcentration(SimpleMolecule("Estimations")) as MutableList<Point>
+                val estimations = filter.getConcentration(SimpleMolecule("Estimations")) as MutableList<ZebraPositionHistory>
                 val id = filter.id
-                exportToCsv(
-                    "$dataPath/estimations_node-${id}_n-${numberOfNeighbors}_seed-$seed.csv",
-                    "estimatedX,estimatedY",
-                    "%.4f,%.4f",
-                    estimations.map { Line(it.x, it.y) }
-                )
+                estimations.forEach { estimation ->
+                    exportToCsv(
+                        "$dataPath/estimations_zebra${estimation.zebraID}_node-${id}_n-${numberOfNeighbors}_seed-$seed.csv",
+                        "estimatedX,estimatedY",
+                        "%.4f,%.4f",
+                        estimation.positions.map { Line(it!!.x, it.y) }
+                    )
+                }
 
 //                val numberOfParticles = filter.getConcentration(SimpleMolecule("NumberOfParticles")) as Int
 //                val particles =
