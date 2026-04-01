@@ -1,16 +1,13 @@
 package it.unibo.filtering
 
 import it.unibo.alchemist.util.RandomGenerators.nextDouble
-import it.unibo.collektive.measureStdDev
+import it.unibo.collektive.alchemist.device.sensors.DistanceFromPosition
 import it.unibo.collektive.p0
 import it.unibo.collektive.pathLoss
-import kotlin.math.PI
+import kotlin.collections.set
 import kotlin.math.exp
 import kotlin.math.hypot
-import kotlin.math.ln
 import kotlin.math.log10
-import kotlin.math.pow
-import kotlin.math.sqrt
 import org.apache.commons.math3.random.RandomGenerator
 
 /**
@@ -22,14 +19,16 @@ import org.apache.commons.math3.random.RandomGenerator
  * @param measurementStdDev The standard deviation of the measurement noise.
  */
 class ParticleFilter(
-    val numberOfParticles: Int = 250,
-    val maxInitialSpeed: Double = 2.0,
-    sideLength: Double = 100.0,
-    val random: RandomGenerator,
+    private val numberOfParticles: Int = 250,
+    private val maxInitialSpeed: Double = 2.0,
+    private val sideLength: Double = 100.0,
+    targetsIDs: Set<Int> = setOf(),
     val measurementStdDev: Double = 0.5,
+    val random: RandomGenerator,
 ) {
+    private val particlesFor: MutableMap<Int, List<Particle>> = targetsIDs.associateWith { initParticles(sideLength) }.toMutableMap()
 
-    private var particles: List<Particle> = initParticles(sideLength)
+//    private var particles: List<Particle> = initParticles(sideLength)
 
     private fun initParticles(sideLength: Double): List<Particle> = List(numberOfParticles) {
         val x = random.nextDouble(0.0, sideLength)
@@ -39,7 +38,7 @@ class ParticleFilter(
         Particle(x, y, vx, vy, 1.0 / numberOfParticles)
     }
 
-    fun getAll(): List<Particle> = particles
+    fun getAll(sampleID: Int): List<Particle> = particlesFor[sampleID] ?: initParticles(sideLength)
 
     /**
      * Predicts the new state of the particles based on a simple motion model with added Gaussian noise.
@@ -48,7 +47,7 @@ class ParticleFilter(
      * @param dt The time step for the prediction.
      * @return A new list of predicted particles.
      */
-    fun predictParticles(sampledParticles: List<Particle>, stdDev: Double = 1.0, dt: Double = 1.0): List<Particle> {
+    fun predictParticles(sampledParticles: List<Particle>, dt: Double = 1.0): List<Particle> {
         val newParticles = ArrayList<Particle>(sampledParticles.size)
         for (p in sampledParticles) {
             val noiseX = random.nextGaussian() * 0.5
@@ -69,15 +68,11 @@ class ParticleFilter(
      * @param newParticles The list of particles to update.
      * @param measurement The observed measurement as a Point.
      */
-    fun updateWeights(newParticles: List<Particle>, measurements: List<Pair<Point, Double>>){ //sensorPosition: Point) {
+    fun updateWeights(particlesID: Int, newParticles: List<Particle>, measurements: List<DistanceFromPosition>){ //sensorPosition: Point) {
 
         var maxLogW = Double.NEGATIVE_INFINITY
-
-
         newParticles.forEach { particle ->
-
             var newW = 0.0
-
             measurements.forEach { (sensorPosition, measurement) ->
                 val d = hypot(particle.x - sensorPosition.x, particle.y - sensorPosition.y).coerceAtLeast(1.0)
                 val expectedMeasure = p0 - 10 * pathLoss * log10(d) //+ random.nextGaussian() * measureStdDev
@@ -108,24 +103,25 @@ class ParticleFilter(
                 p.weight = uniformWeight
             }
         }
-        particles = newParticles
+        particlesFor[particlesID] = newParticles
     }
 
     /**
      * Resamples particles based on their weights using systematic resampling.
      * @return A new list of resampled particles with reset weights.
      */
-    fun resample(): List<Particle> {
+    fun resample(sampleID: Int): List<Particle> {
+        if (particlesFor[sampleID].isNullOrEmpty()) particlesFor[sampleID] = initParticles(sideLength)
         val newParticles = ArrayList<Particle>(numberOfParticles)
-        val totalWeight = particles.sumOf { it.weight }
+        val totalWeight = (particlesFor[sampleID] ?: initParticles(sideLength)).sumOf { it.weight }
 
-        if (totalWeight == 0.0) return particles
+        if (totalWeight == 0.0) return particlesFor[sampleID]!!
 
         val cumulativeWeights = DoubleArray(numberOfParticles)
         var currentSum = 0.0
 
         for (i in 0 until numberOfParticles) {
-            currentSum += particles[i].weight
+            currentSum += particlesFor[sampleID]!![i].weight
             cumulativeWeights[i] = currentSum / totalWeight
         }
 
@@ -144,7 +140,7 @@ class ParticleFilter(
                 }
             }
 
-            val p = particles[selectedIndex]
+            val p = particlesFor[sampleID]!![selectedIndex]
             newParticles.add(
                 Particle(
                     x = p.x,
@@ -163,10 +159,11 @@ class ParticleFilter(
      * Estimates the current position based on the weighted average of the particles.
      * @return The estimated position as a Point.
      */
-    fun estimatePosition(): Point {
+    fun estimatePosition(sampleID: Int): Point {
+        if (particlesFor[sampleID].isNullOrEmpty()) particlesFor[sampleID] = initParticles(sideLength)
         var x = 0.0
         var y = 0.0
-        for (p in particles) {
+        for (p in particlesFor[sampleID]!!) {
             x += p.x * p.weight
             y += p.y * p.weight
         }
