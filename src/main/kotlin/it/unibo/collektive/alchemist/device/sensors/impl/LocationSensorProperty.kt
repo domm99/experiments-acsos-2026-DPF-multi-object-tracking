@@ -6,6 +6,7 @@ import it.unibo.alchemist.model.NodeProperty
 import it.unibo.alchemist.model.Position
 import it.unibo.alchemist.model.molecules.SimpleMolecule
 import it.unibo.collektive.alchemist.device.sensors.LocationSensor
+import it.unibo.collektive.alchemist.device.sensors.TrackedZebra
 import it.unibo.filtering.Point
 import org.apache.commons.math3.random.RandomGenerator
 
@@ -38,14 +39,20 @@ class LocationSensorProperty<T : Any, P : Position<P>>(
         environment.getPosition(node).coordinates.let { Point(it[0], it[1]) }
     }
 
-    override fun targetsPosition(): List<Point> = environment.nodes
+    override fun targetsPosition(): List<TrackedZebra> = environment.nodes
         .filter { node ->
-            node.contains(SimpleMolecule("Movable"))
+            node.contains(SimpleMolecule("Zebra"))
         }.map { target ->
             val position = environment.getPosition(target)
             val newX = position.coordinates[0]
             val newY = position.coordinates[1]
-            Point(newX, newY)
+            val id = when (val idFromMolecule = target.getConcentration(SimpleMolecule("ZebraID"))) {
+                is Boolean -> -1
+                is Unit -> -2
+                is String -> idFromMolecule.toInt()
+                else -> idFromMolecule as Int
+            }
+            TrackedZebra(id, Point(newX, newY))
         }
 
     override fun selfPosition(): Point {

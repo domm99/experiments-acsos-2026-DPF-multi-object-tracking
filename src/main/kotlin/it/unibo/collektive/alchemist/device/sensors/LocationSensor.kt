@@ -19,7 +19,7 @@ interface LocationSensor {
     /**
      * Returns position(s) of the targets in the environment.
      */
-    fun targetsPosition(): List<Point>
+    fun targetsPosition(): List<TrackedZebra>
 
     /**
      * Returns position of the device in the environment.
