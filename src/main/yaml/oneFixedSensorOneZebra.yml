@@ -90,28 +90,11 @@ deployments:
       - type: it.unibo.collektive.alchemist.device.sensors.impl.LocationSensorProperty
 #        parameters: [ *measurementStdDev ]
 
-
 monitors:
   - type: it.unibo.alchemist.model.monitors.ExportEstimations
     parameters: [*seed, *numberOfNeighbors, *dataPath]
   - type: it.unibo.alchemist.model.monitors.ExportSensorsDeployment
     parameters: [*seed, *numberOfNeighbors, *dataPath]
-
-export:
-  - type: CSVExporter
-    parameters:
-      fileNameRoot: "real-trajectory"
-      interval: 1.0
-      exportPath: *dataPath
-    data:
-      - time
-      - molecule: PositionX
-        aggregators: [ mean ]
-        value-filter: onlyFinite
-        precision: 3
-      - molecule: PositionY
-        aggregators: [ mean ]
-        value-filter: onlyfinite
 
 terminate:
   type: AfterTime
