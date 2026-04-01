@@ -41,16 +41,16 @@ class LocationSensorProperty<T : Any, P : Position<P>>(
 
     override fun targetsPosition(): List<TrackedZebra> = environment.nodes
         .filter { node ->
-            node.contains(SimpleMolecule("Zebra"))
+            node.contains(SimpleMolecule("ZebraID"))
         }.map { target ->
             val position = environment.getPosition(target)
             val newX = position.coordinates[0]
             val newY = position.coordinates[1]
             val id = when (val idFromMolecule = target.getConcentration(SimpleMolecule("ZebraID"))) {
-                is Boolean -> -1
-                is Unit -> -2
                 is String -> idFromMolecule.toInt()
-                else -> idFromMolecule as Int
+                is Double -> idFromMolecule.toInt()
+                is Int -> idFromMolecule
+                else -> error("type for $idFromMolecule not supported")
             }
             TrackedZebra(id, Point(newX, newY))
         }

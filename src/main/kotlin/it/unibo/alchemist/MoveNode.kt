@@ -35,14 +35,14 @@ class MoveNode<T>(
         val file = this::class.java.classLoader.getResourceAsStream(movementCsvPath)
             ?: throw FileNotFoundException("Cannot find movement csv file $movementCsvPath")
         return csvReader().open(file) {
-            val regex = Regex("zebra_*(\\d+)\\.csv")
+            val regex = Regex("\\d{3,}")
             val row = readAllWithHeaderAsSequence().elementAtOrNull(step)
             if (row != null) {
                 val x = row["x"]
                 val y = row["y"]
                 if (x != null && y != null) {
                     // take the ID from the filename
-                    val zebraID = regex.find(movementCsvPath)?.groupValues?.get(1) ?: "unknown"
+                    val zebraID = regex.find(movementCsvPath)?.groupValues?.first()
                     node.setConcentration(SimpleMolecule("ZebraID"), zebraID as T?)
                     node.setConcentration(SimpleMolecule("PositionX"), x.toDouble() as T?)
                     node.setConcentration(SimpleMolecule("PositionY"), y.toDouble() as T?)
