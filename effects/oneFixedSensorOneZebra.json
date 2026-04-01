@@ -94,10 +94,10 @@
       "val": 10
     },
     "molFilter": true,
-    "molString": "Zebra",
-    "molPropertyFilter": false,
+    "molString": "ZebraID",
+    "molPropertyFilter": true,
     "property": "",
-    "writingPropertyValue": false,
+    "writingPropertyValue": true,
     "c": "ALPHA",
     "reverse": false,
     "propoom": {

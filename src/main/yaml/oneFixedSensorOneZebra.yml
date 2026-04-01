@@ -2,11 +2,13 @@ incarnation: collektive
 
 _constants:
   measurementStdDev: &measurementStdDev 2.0
+  zebra35: &zebra35 35.0
+  zebra38: &zebra38 38.0
 
 variables:
   numberOfParticles: &numberOfParticles 250
   maxInitialSpeed: &maxInitialSpeed 2.0
-  neighboringDistance: &neighboringDistance 250.0
+  neighboringDistance: &neighboringDistance 50.0
   numberOfNeighbors: &numberOfNeighbors
     type: ArbitraryVariable
     parameters: [ 0, [0, 1, 2, 4, 7] ]
@@ -21,12 +23,18 @@ variables:
 
 network-model:
   type: ConnectWithinDistance
-  parameters: [250]
+  parameters: [*neighboringDistance]
 
-_movement: &movement
+_movementZebra35: &movementZebra35
   - time-distribution: 1
-#      type: DiracComb
-#      parameters: [ 0.1, 1 ]
+    type: Event
+    actions:
+      - type: MoveNode
+        parameters:
+          - "zebras-trajectories/flights/flight_1_zebras/zebra_035.csv"
+
+_movementZebra38: &movementZebra38
+  - time-distribution: 1
     type: Event
     actions:
       - type: MoveNode
@@ -44,13 +52,22 @@ _pool: &program
 deployments:
   - type: Point
     parameters: [ 0, 0 ]
-    contents:
-      - molecule: Zebra
-        concentration: true
-      - molecule: ZebraID
-        concentration: false
+#    contents:
+#      - molecule: Zebra
+#        concentration: true
+#      - molecule: ZebraID
+#        concentration: *zebra35
     programs:
-      - *movement
+      - *movementZebra35
+  - type: Point
+    parameters: [ 0, 0 ]
+#    contents:
+#      - molecule: Zebra
+#        concentration: true
+#      - molecule: ZebraID
+#        concentration: *zebra38
+    programs:
+      - *movementZebra38
 #  - type: Point
 #    parameters: [15, 15]
   - type: Grid
