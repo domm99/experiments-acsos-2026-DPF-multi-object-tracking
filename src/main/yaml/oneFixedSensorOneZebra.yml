@@ -21,7 +21,7 @@ variables:
 
 network-model:
   type: ConnectWithinDistance
-  parameters: [15]
+  parameters: [250]
 
 _movement: &movement
   - time-distribution: 1
@@ -38,12 +38,23 @@ _pool: &program
     type: Event
     actions:
       - type: RunCollektiveProgram
-        parameters: [ it.unibo.collektive.AggregateInformationAgentKt.informationFilterEntrypoint ]
-#        parameters: [ it.unibo.collektive.AggregateInformationAgentLeaderBasedKt.informationFilterEntrypointLeaderBased ]
+        parameters: [ it.unibo.collektive.AggregateInformationAgentLeaderBasedKt.informationFilterEntrypointLeaderBased ]
+#        parameters: [ it.unibo.collektive.AggregateInformationAgentKt.informationFilterEntrypoint ]
 
 deployments:
   - type: Point
-    parameters: [ 15, 15 ]
+    parameters: [ 0, 0 ]
+    contents:
+      - molecule: Zebra
+        concentration: true
+      - molecule: ZebraID
+        concentration: false
+    programs:
+      - *movement
+#  - type: Point
+#    parameters: [15, 15]
+  - type: Grid
+    parameters: [ -70, -10, 100, 100, *stepLength, *stepLength, 1, 1 ]
     contents:
       - molecule: Filter
         concentration: true
@@ -60,14 +71,7 @@ deployments:
     programs: *program
     properties:
       - type: it.unibo.collektive.alchemist.device.sensors.impl.LocationSensorProperty
-        parameters: [ *measurementStdDev ]
-  - type: Point
-    parameters: [ 0, 0 ]
-    contents:
-      - molecule: Movable
-        concentration: true
-    programs:
-      - *movement
+#        parameters: [ *measurementStdDev ]
 
 
 monitors:
