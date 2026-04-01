@@ -5,13 +5,16 @@ import it.unibo.alchemist.model.Environment
 import it.unibo.alchemist.model.Position
 import it.unibo.alchemist.model.molecules.SimpleMolecule
 import it.unibo.collektive.aggregate.api.Aggregate
+import it.unibo.collektive.alchemist.device.sensors.DistanceFromPosition
 import it.unibo.collektive.alchemist.device.sensors.EnvironmentVariables
 import it.unibo.collektive.alchemist.device.sensors.LocationSensor
+import it.unibo.collektive.alchemist.device.sensors.ZebraPositionHistory
 import it.unibo.collektive.stdlib.accumulation.convergeCast
 import it.unibo.collektive.stdlib.consensus.boundedElection
 import it.unibo.filtering.ParticleFilter
 import it.unibo.filtering.Point
 import it.unibo.filtering.distanceTo
+import kotlin.collections.plus
 import kotlin.math.exp
 import kotlin.math.hypot
 import kotlin.math.log10
@@ -33,13 +36,12 @@ fun Aggregate<Int>.informationFilterEntrypointLeaderBased(
 ) = context(env, collektiveDevice.randomGenerator, position, collektiveDevice) {
 
     val isDown = env["isDown"] as Boolean
-
     if(!isDown) {
         val sideLength = env["SideLength"] as Int
         val numberOfParticles = env["NumberOfParticles"] as Int
         val maxInitialSpeed = env["MaxInitialSpeed"] as Double
         val isLeader = isLeaderBasedOnLocation(sideLength).also { env["isLeader"] = it }
-        val estimations = env.getOrDefault("Estimations", listOf<Point>())
+        val estimations = env.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
         with(env) {
             sensorsExecution(isLeader, estimations, numberOfParticles, maxInitialSpeed, sideLength.toDouble())
         }.also { history ->
@@ -51,36 +53,65 @@ fun Aggregate<Int>.informationFilterEntrypointLeaderBased(
 context(device: CollektiveDevice<*>, position: LocationSensor, env: EnvironmentVariables)
 fun Aggregate<Int>.sensorsExecution(
     isLeader: Boolean,
-    estimationsHistory: List<Point>,
+    estimationsHistory: List<ZebraPositionHistory>,
     numberOfParticles: Int,
     maxInitialSpeed: Double,
     sideLength: Double,
-): List<Point> = evolving(
-    ParticleFilter(
+): List<ZebraPositionHistory> {
+    val targetsPosition = position.targetsPosition()
+    val selfPosition = position.selfPosition()
+    return evolving(
+        ParticleFilter(
             numberOfParticles,
             maxInitialSpeed,
             sideLength,
-            device.randomGenerator,
-    ),
-) { filter ->
-    val sensedPosition = position.targetsPosition().first()
-    env["Particles"] = filter.getAll()
+            targetsIDs = targetsPosition.map { it.zebraID }.toSet(),
+            random = device.randomGenerator,
+        ),
+    ) { filter ->
+        val estimations = mutableListOf<ZebraPositionHistory>()
+        for (zebra in targetsPosition) {
+            alignedOn(zebra.zebraID) {
+                env["Particles${zebra.zebraID}"] = filter.getAll(zebra.zebraID)
+                val myMeasure = fromPositionToMeasure(selfPosition, zebra.position, device.randomGenerator)
 
-    val selfPosition = position.selfPosition()
-    val targetPosition = position.targetsPosition().first()
-    val myMeasure = fromPositionToMeasure(selfPosition, targetPosition, device.randomGenerator)
+                val convergedMeasurements =
+                    convergeCast(
+                        listOfNotNull(DistanceFromPosition(selfPosition, myMeasure)),
+                        isLeader
+                    ) { m1, m2 -> m1 + m2 }
 
-    val convergedMeasurements =
-        convergeCast(listOfNotNull(selfPosition to myMeasure), isLeader) { m1, m2 -> m1 + m2 }
-
-    val estimate = if (isLeader) {
-        val sampledParticles = filter.resample()
-        val newParticles = filter.predictParticles(sampledParticles)
-        filter.updateWeights(newParticles, convergedMeasurements)
-        val pos = filter.estimatePosition()
-        pos
-    } else null
-    filter.yielding { if(estimate != null) estimationsHistory + estimate else estimationsHistory }
+                val point: Point? = if (isLeader) {
+                    val sampledParticles = filter.resample(zebra.zebraID)
+                    val newParticles = filter.predictParticles(sampledParticles)
+                    filter.updateWeights(zebra.zebraID, newParticles, convergedMeasurements)
+                    filter.estimatePosition(zebra.zebraID)
+                } else null
+                val oldZebraInfo = estimations.find { it.zebraID == zebra.zebraID }
+                if (point != null) {
+                    val newZebraInfo = when {
+                        oldZebraInfo != null -> oldZebraInfo.copy(positions = oldZebraInfo.positions + point)
+                        else -> ZebraPositionHistory(zebra.zebraID, listOf(point))
+                    }
+                    estimations.add(newZebraInfo)
+                }
+            }
+        }
+        filter.yielding {
+            when {
+                estimationsHistory.isNotEmpty() && estimations.isNotEmpty() -> {
+                    estimationsHistory.map { history ->
+                        val zebraPos = estimations.find { zebra -> zebra.zebraID == history.zebraID }?.positions
+                        when {
+                            zebraPos != null -> history.copy(positions = history.positions + zebraPos)
+                            else -> history
+                        }
+                    }
+                }
+                else -> estimations
+            }
+        }
+    }
 }
 
 context(device: CollektiveDevice<*>, position: LocationSensor)
