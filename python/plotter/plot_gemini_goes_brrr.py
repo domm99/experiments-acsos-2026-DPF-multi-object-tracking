@@ -1,6 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
+import glob
+import re
+from collections import defaultdict
 
 def read_real_trajectory(path):
     # Skip the Alchemist header and manually assign column names
@@ -17,12 +20,10 @@ def generate_charts(plot_configs, charts_path):
     # Pre-defined high-contrast colors for the real trajectory lines
     line_colors = ['black', 'gray', 'blue', 'red', 'green', 'purple', 'orange', 'cyan', 'magenta', 'brown']
 
-    # Iterate over each configuration to create completely separate figures
     for title, entities in plot_configs.items():
         fig, ax = plt.subplots(figsize=(10, 10), constrained_layout=True)
 
-        # 1. Calculate global MIN and MAX time steps across all entities in this plot
-        # This ensures the colormap applies colors synchronously to all zebras
+        # Calculate global MIN and MAX time steps to synchronize the colormap across all zebras
         min_time = float('inf')
         max_time = float('-inf')
         for entity in entities:
@@ -36,7 +37,7 @@ def generate_charts(plot_configs, charts_path):
 
         last_scatter = None
 
-        # 2. Plot each zebra dynamically
+        # Plot each zebra's real and aggregated estimation trajectories
         for idx, entity in enumerate(entities):
             df_true = entity['real']
             df_est = entity['estimation']
@@ -49,7 +50,6 @@ def generate_charts(plot_configs, charts_path):
                     linestyle='--', linewidth=2, alpha=0.5)
 
             # Plot estimated points (scatter)
-            # We force vmin and vmax so that time steps perfectly match the color mapping across zebras
             last_scatter = ax.scatter(
                 df_est['estimatedX'],
                 df_est['estimatedY'],
@@ -63,7 +63,7 @@ def generate_charts(plot_configs, charts_path):
                 label=f'Estimation {zebra_name}'
             )
 
-            # Mark start and end points (only labeled once to avoid legend clutter)
+            # Mark start and end points
             start_label = 'Start' if idx == 0 else None
             end_label = 'End' if idx == 0 else None
 
@@ -73,7 +73,7 @@ def generate_charts(plot_configs, charts_path):
             ax.scatter(df_true['x'].iloc[-1], df_true['y'].iloc[-1],
                        color='red', s=150, zorder=5, edgecolors='black', label=end_label)
 
-            # Update overall plot bounds dynamically
+            # Update bounds
             min_x = min(min_x, df_true['x'].min(), df_est['estimatedX'].min())
             max_x = max(max_x, df_true['x'].max(), df_est['estimatedX'].max())
             min_y = min(min_y, df_true['y'].min(), df_est['estimatedY'].min())
@@ -84,7 +84,7 @@ def generate_charts(plot_configs, charts_path):
         ax.set_xlabel('X (m)', fontsize=25)
         ax.set_ylabel('Y (m)', fontsize=25)
 
-        # Apply a 10% padding to bounds (fallback to 10 if bounds are 0)
+        # Apply a 10% padding to bounds
         padding_x = (max_x - min_x) * 0.1 if max_x != min_x else 10
         padding_y = (max_y - min_y) * 0.1 if max_y != min_y else 10
         ax.set_xlim(min_x - padding_x, max_x + padding_x)
@@ -97,11 +97,9 @@ def generate_charts(plot_configs, charts_path):
         # Handle Legend creation (avoiding duplicates)
         handles, labels = ax.get_legend_handles_labels()
         by_label = dict(zip(labels, handles))
-        # Place legend below the plot to support 10+ items comfortably
         leg = ax.legend(by_label.values(), by_label.keys(), loc='upper center', bbox_to_anchor=(0.5, -0.15),
                         ncol=4, fontsize=15)
 
-        # Resize legend markers
         for handle in leg.legend_handles:
             if hasattr(handle, 'set_sizes'):
                 handle.set_sizes([100])
@@ -117,7 +115,8 @@ def generate_charts(plot_configs, charts_path):
             cbar.set_ticklabels([str(min_time), str(max_time)])
 
         # Save to PNG and PDF formats
-        safe_filename = title.replace(" ", "_").lower()
+        # Ensure safe filenames by replacing spaces and parentheses
+        safe_filename = title.replace(" ", "_").replace("(", "").replace(")", "").replace(",", "").lower()
         plt.savefig(f'{charts_path}/{safe_filename}.pdf', bbox_inches='tight')
         plt.savefig(f'{charts_path}/{safe_filename}.png', bbox_inches='tight', dpi=300)
         plt.close()
@@ -127,41 +126,107 @@ if __name__ == '__main__':
     # ---------------------------------------------------------
     # QUICK CONFIGURATION AREA
     # ---------------------------------------------------------
-    seed = 42
-    node = 10
-    n = 0
     flight_number = 1
-
-    # Just add or remove Zebra IDs here. The script handles the rest!
     zebra_ids = [35, 38]
+
+    # Define the list of experiment names. These must match the subfolder names inside "data/"
+    experiments = ['oneFixedSensorOneZebra']
+
+    base_charts_path = 'charts'
+    base_data_path = 'data'
+    real_base_path = f'src/main/resources/zebras-trajectories/flights/flight_{flight_number}_zebras'
     # ---------------------------------------------------------
 
-    charts_path = 'charts'
-    Path(charts_path).mkdir(parents=True, exist_ok=True)
+    # Setup regex to extract parameters from filenames
+    # Example filename: estimations_zebra35_node-10_n-0_seed-42.0.csv
+    file_pattern = re.compile(r'estimations_zebra(\d+)_node-(\d+)_n-(\d+)_seed-([\d\.]+)\.csv')
 
-    real_base_path = f'src/main/resources/zebras-trajectories/flights/flight_{flight_number}_zebras'
-    est_base_path = 'data'
+    # Iterate over each defined experiment
+    for current_experiment in experiments:
+        print(f"\n--- Processing Experiment: {current_experiment} ---")
 
-    loaded_zebras = []
-    plot_configs = {}
+        # Dynamically define paths for the current experiment
+        exp_data_path = f'{base_data_path}/{current_experiment}'
+        exp_charts_path = f'{base_charts_path}/{current_experiment}'
 
-    # Dynamically load data for all specified zebras
-    for zid in zebra_ids:
-        # zfill(3) adds leading zeros to match the "zebra_035.csv" naming convention
-        z_str = str(zid).zfill(3)
+        # Check if the data directory for this experiment exists
+        if not Path(exp_data_path).exists():
+            print(f"Warning: Directory '{exp_data_path}' does not exist. Skipping...")
+            continue
 
-        entity = {
-            'name': f'Zebra {zid}',
-            'real': read_real_trajectory(f'{real_base_path}/zebra_{z_str}.csv'),
-            'estimation': read_estimation(f'{est_base_path}/estimations_zebra{zid}_node-{node}_n-{n}_seed-{seed}.0.csv')
-        }
-        loaded_zebras.append(entity)
+        # Create a specific output folder for the charts of this experiment
+        Path(exp_charts_path).mkdir(parents=True, exist_ok=True)
 
-        # Add single-zebra configuration to generate isolated plots
-        plot_configs[f'Zebra {zid}'] = [entity]
+        # Discover all estimation files inside the experiment's data folder
+        all_files = glob.glob(f'{exp_data_path}/estimations_zebra*_node-*_n-*_seed-*.csv')
 
-    # Add combined configuration to generate the global plot
-    plot_configs['Combined Trajectories'] = loaded_zebras
+        if not all_files:
+            print(f"No estimation files found in '{exp_data_path}'. Skipping...")
+            continue
 
-    # Generate everything
-    generate_charts(plot_configs, charts_path)
+        # Group files by (zebra_id, node, n) to aggregate across multiple seeds
+        grouped_files = defaultdict(list)
+
+        for file_path in all_files:
+            # Extract filename from path
+            filename = Path(file_path).name
+            match = file_pattern.search(filename)
+
+            if match:
+                zid, node, n, seed = match.groups()
+                zid, node, n = int(zid), int(node), int(n)
+
+                # Only process zebras we are interested in
+                if zid in zebra_ids:
+                    grouped_files[(zid, node, n)].append(file_path)
+
+        # Re-organize configurations by (node, n) so we can plot multiple zebras together
+        scenarios = defaultdict(list)
+
+        for (zid, node, n), files in grouped_files.items():
+            dfs = []
+            for f in files:
+                dfs.append(read_estimation(f))
+
+            # Aggregate multiple seeds by taking the mean across the index (time steps)
+            df_estimation_aggregated = pd.concat(dfs).groupby(level=0).mean()
+
+            # Load the real trajectory (handling the padding with zeros like zebra_035.csv)
+            z_str = str(zid).zfill(3)
+            real_path = f'{real_base_path}/zebra_{z_str}.csv'
+            df_real = read_real_trajectory(real_path)
+
+            entity = {
+                'name': f'Zebra {zid}',
+                'real': df_real,
+                'estimation': df_estimation_aggregated
+            }
+
+            scenarios[(node, n)].append((zid, entity))
+
+        # Generate configurations for isolated and combined plots
+        plot_configs = {}
+
+        for (node, n), entities_list in scenarios.items():
+
+            combined_entities = []
+
+            for zid, entity in entities_list:
+                # 1. Configuration for isolated plot
+                title = f'Zebra {zid} Node {node} N {n}'
+                plot_configs[title] = [entity]
+                combined_entities.append(entity)
+
+            # 2. Configuration for combined plot (if more than 1 zebra is present in this scenario)
+            if len(combined_entities) > 1:
+                combined_title = f'Combined Trajectories Node {node} N {n}'
+                plot_configs[combined_title] = combined_entities
+
+        if not plot_configs:
+            print(f"No matching data found in '{exp_data_path}' for Zebras: {zebra_ids}")
+        else:
+            # Generate all charts for the current experiment
+            generate_charts(plot_configs, exp_charts_path)
+            print(f"Charts for '{current_experiment}' successfully generated in '{exp_charts_path}'.")
+
+    print("\nAll experiments processed.")
