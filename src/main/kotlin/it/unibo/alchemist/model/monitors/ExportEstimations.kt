@@ -27,6 +27,11 @@ class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val dat
 
     override fun finished(environment: Environment<T?, Euclidean2DPosition>, time: Time, step: Long) {
         try{
+            val outputDir = File(dataPath)
+            if (!outputDir.exists() && !outputDir.mkdirs()) {
+                throw IllegalStateException("Cannot create output directory: $dataPath")
+            }
+            
             val filters = environment.nodes
                 .filter { it.contains(SimpleMolecule("Filter")) }
                 .filter { hasEstimations(it) }
@@ -61,6 +66,7 @@ class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val dat
 //                    hist
 //                )
             }
+            println("Export Estimations finished")
         }catch (e: Exception) {
             println(e.message)
         }
