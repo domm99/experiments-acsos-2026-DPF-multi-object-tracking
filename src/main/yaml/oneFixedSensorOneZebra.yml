@@ -1,10 +1,5 @@
 incarnation: collektive
 
-_constants:
-  measurementStdDev: &measurementStdDev 2.0
-  zebra35: &zebra35 35.0
-  zebra38: &zebra38 38.0
-
 variables:
   numberOfParticles: &numberOfParticles 250
   maxInitialSpeed: &maxInitialSpeed 2.0
@@ -13,13 +8,13 @@ variables:
     type: ArbitraryVariable
     parameters: [ 0, [0, 1, 2, 4, 7] ]
   stepLength: &stepLength 30
-  dataPath: &dataPath "data"
+  dataPath: &dataPath "data/oneFixedSensorOneZebra/"
   size: &size 150
   seed: &seed
     min: 0
-    max: 100
+    max: 2
     step: 1
-    default: 42
+    default: 4
 
 network-model:
   type: ConnectWithinDistance
@@ -90,11 +85,17 @@ deployments:
       - type: it.unibo.collektive.alchemist.device.sensors.impl.LocationSensorProperty
 #        parameters: [ *measurementStdDev ]
 
+launcher:
+  parameters:
+    batch: [ seed ]
+    showProgress: true
+    autoStart: true
+
 monitors:
   - type: it.unibo.alchemist.model.monitors.ExportEstimations
     parameters: [*seed, *numberOfNeighbors, *dataPath]
-  - type: it.unibo.alchemist.model.monitors.ExportSensorsDeployment
-    parameters: [*seed, *numberOfNeighbors, *dataPath]
+#  - type: it.unibo.alchemist.model.monitors.ExportSensorsDeployment
+#    parameters: [*seed, *numberOfNeighbors, *dataPath]
 
 terminate:
   type: AfterTime
