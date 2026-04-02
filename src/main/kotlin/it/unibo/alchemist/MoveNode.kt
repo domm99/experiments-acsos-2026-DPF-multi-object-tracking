@@ -1,17 +1,13 @@
 package it.unibo.alchemist
 
-import java.io.File
-import it.unibo.alchemist.model.Node
-import it.unibo.alchemist.model.Action
-import it.unibo.alchemist.model.Reaction
-import it.unibo.alchemist.model.Environment
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
-import it.unibo.alchemist.model.TerminationPredicate
-import it.unibo.alchemist.model.Time
+import it.unibo.alchemist.model.Action
+import it.unibo.alchemist.model.Environment
+import it.unibo.alchemist.model.Node
+import it.unibo.alchemist.model.Reaction
 import it.unibo.alchemist.model.actions.AbstractMoveNode
 import it.unibo.alchemist.model.molecules.SimpleMolecule
 import it.unibo.alchemist.model.positions.Euclidean2DPosition
-import it.unibo.alchemist.model.terminators.AfterTime
 import java.io.FileNotFoundException
 
 /**
@@ -23,11 +19,8 @@ import java.io.FileNotFoundException
  * @param node the node under movement
  * @param movementCsvPath the path of the CSV file containing the movement trajectory
  */
-class MoveNode<T>(
-    environment: Environment<T, Euclidean2DPosition>,
-    node: Node<T>,
-    val movementCsvPath: String,
-) : AbstractMoveNode<T, Euclidean2DPosition>(environment, node, true) {
+class MoveNode<T>(environment: Environment<T, Euclidean2DPosition>, node: Node<T>, val movementCsvPath: String) :
+    AbstractMoveNode<T, Euclidean2DPosition>(environment, node, true) {
 
     private var step: Int = 0
 
@@ -57,10 +50,6 @@ class MoveNode<T>(
         }
     }
 
-    override fun cloneAction(
-        p0: Node<T?>?,
-        p1: Reaction<T?>?
-    ): Action<T?> =
+    override fun cloneAction(p0: Node<T?>?, p1: Reaction<T?>?): Action<T?> =
         MoveNode(environment, node, movementCsvPath)
-
 }
