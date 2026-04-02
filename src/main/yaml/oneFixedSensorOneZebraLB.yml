@@ -3,18 +3,20 @@ incarnation: collektive
 variables:
   numberOfParticles: &numberOfParticles 250
   maxInitialSpeed: &maxInitialSpeed 2.0
-  neighboringDistance: &neighboringDistance 50.0
-  numberOfNeighbors: &numberOfNeighbors
-    type: ArbitraryVariable
-    parameters: [ 0, [0, 1, 2, 4, 7] ]
+  neighboringDistance: &neighboringDistance 40.0
+  numberOfNeighbors: &numberOfNeighbors 0
   stepLength: &stepLength 30
   dataPath: &dataPath "data/oneFixedSensorOneZebraLB/"
-  size: &size 150
+  startX: &startX -70
+  endX: &endX 50
+  startY: &startY -10
+  endY: &endY 100
+  size: &size 120
   seed: &seed
     min: 0
-    max: 2
+    max: 5
     step: 1
-    default: 4
+    default: 42
 
 network-model:
   type: ConnectWithinDistance
@@ -27,6 +29,14 @@ _movementZebra35: &movementZebra35
       - type: MoveNode
         parameters:
           - "zebras-trajectories/flights/flight_1_zebras/zebra_035.csv"
+
+_movementZebra37: &movementZebra37
+  - time-distribution: 1
+    type: Event
+    actions:
+      - type: MoveNode
+        parameters:
+          - "zebras-trajectories/flights/flight_1_zebras/zebra_037.csv"
 
 _movementZebra38: &movementZebra38
   - time-distribution: 1
@@ -42,31 +52,24 @@ _pool: &program
     actions:
       - type: RunCollektiveProgram
         parameters: [ it.unibo.collektive.AggregateInformationAgentLeaderBasedKt.informationFilterEntrypointLeaderBased ]
-#        parameters: [ it.unibo.collektive.AggregateInformationAgentKt.informationFilterEntrypoint ]
 
 deployments:
   - type: Point
     parameters: [ 0, 0 ]
-#    contents:
-#      - molecule: Zebra
-#        concentration: true
-#      - molecule: ZebraID
-#        concentration: *zebra35
     programs:
       - *movementZebra35
   - type: Point
     parameters: [ 0, 0 ]
-#    contents:
-#      - molecule: Zebra
-#        concentration: true
-#      - molecule: ZebraID
-#        concentration: *zebra38
+    programs:
+      - *movementZebra37
+  - type: Point
+    parameters: [ 0, 0 ]
     programs:
       - *movementZebra38
 #  - type: Point
 #    parameters: [15, 15]
   - type: Grid
-    parameters: [ -70, -10, 100, 100, *stepLength, *stepLength, 1, 1 ]
+    parameters: [ *startX, *startY, *endX, *endY, *stepLength, *stepLength, 2, 2 ]
     contents:
       - molecule: Filter
         concentration: true

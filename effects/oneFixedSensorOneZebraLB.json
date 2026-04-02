@@ -33,11 +33,11 @@
       "min": 0,
       "val": 5
     },
-    "molFilter": false,
-    "molString": "",
-    "molPropertyFilter": false,
-    "property": "",
-    "writingPropertyValue": false,
+    "molFilter": true,
+    "molString": "it.unibo.collektive.AggregateInformationAgentLeaderBasedKt.informationFilterEntrypointLeaderBased",
+    "molPropertyFilter": true,
+    "property": "localId",
+    "writingPropertyValue": true,
     "c": "ALPHA",
     "reverse": false,
     "propoom": {
@@ -151,14 +151,14 @@
     "size": {
       "max": 100,
       "min": 0,
-      "val": 8
+      "val": 47
     },
     "molFilter": true,
-    "molString": "isLeader",
+    "molString": "isLeaderOf35",
     "molPropertyFilter": true,
     "property": "",
     "writingPropertyValue": false,
-    "c": "HUE",
+    "c": "ALPHA",
     "reverse": false,
     "propoom": {
       "max": 10,
@@ -237,6 +237,126 @@
     },
     "colorCache": {
       "value": 1026702408
+    }
+  },
+  {
+    "type": "class it.unibo.alchemist.boundary.gui.effects.DrawShape",
+    "curIncarnation": "collektive",
+    "mode": "FILL_ELLIPSE",
+    "red": {
+      "max": 255,
+      "min": 0,
+      "val": 0
+    },
+    "blue": {
+      "max": 255,
+      "min": 0,
+      "val": 0
+    },
+    "green": {
+      "max": 255,
+      "min": 0,
+      "val": 255
+    },
+    "alpha": {
+      "max": 255,
+      "min": 0,
+      "val": 255
+    },
+    "scaleFactor": {
+      "max": 100,
+      "min": 0,
+      "val": 50
+    },
+    "size": {
+      "max": 100,
+      "min": 0,
+      "val": 57
+    },
+    "molFilter": true,
+    "molString": "isLeaderOf38",
+    "molPropertyFilter": true,
+    "property": "",
+    "writingPropertyValue": false,
+    "c": "ALPHA",
+    "reverse": false,
+    "propoom": {
+      "max": 10,
+      "min": -10,
+      "val": 0
+    },
+    "minprop": {
+      "max": 10,
+      "min": -10,
+      "val": 0
+    },
+    "maxprop": {
+      "max": 10,
+      "min": -10,
+      "val": 10
+    },
+    "colorCache": {
+      "value": -16711936
+    }
+  },
+  {
+    "type": "class it.unibo.alchemist.boundary.gui.effects.DrawShape",
+    "curIncarnation": "collektive",
+    "mode": "FILL_ELLIPSE",
+    "red": {
+      "max": 255,
+      "min": 0,
+      "val": 0
+    },
+    "blue": {
+      "max": 255,
+      "min": 0,
+      "val": 0
+    },
+    "green": {
+      "max": 255,
+      "min": 0,
+      "val": 255
+    },
+    "alpha": {
+      "max": 255,
+      "min": 0,
+      "val": 255
+    },
+    "scaleFactor": {
+      "max": 100,
+      "min": 0,
+      "val": 50
+    },
+    "size": {
+      "max": 100,
+      "min": 0,
+      "val": 12
+    },
+    "molFilter": true,
+    "molString": "isLeader",
+    "molPropertyFilter": true,
+    "property": "",
+    "writingPropertyValue": false,
+    "c": "HUE",
+    "reverse": false,
+    "propoom": {
+      "max": 10,
+      "min": -10,
+      "val": 0
+    },
+    "minprop": {
+      "max": 10,
+      "min": -10,
+      "val": 0
+    },
+    "maxprop": {
+      "max": 10,
+      "min": -10,
+      "val": 10
+    },
+    "colorCache": {
+      "value": -16711936
     }
   }
 ]
