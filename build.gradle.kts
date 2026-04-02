@@ -105,8 +105,6 @@ File(rootProject.rootDir.path + "/src/main/yaml")
                           parameters: { graphics: effects/${it.nameWithoutExtension}.json }
                         - type: it.unibo.alchemist.model.monitors.ExportEstimations
                           parameters: [42, 0, "$dataPath"]
-                        - type: it.unibo.alchemist.model.monitors.ExportSensorsDeployment
-                          parameters: [42, 0, "$dataPath"]
                 """.trimIndent(),
                 "--override",
                 "launcher: { parameters: { batch: [], autoStart: false } }",
