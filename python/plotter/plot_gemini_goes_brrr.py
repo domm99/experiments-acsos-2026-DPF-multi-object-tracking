@@ -6,13 +6,13 @@ import re
 from collections import defaultdict
 
 def read_real_trajectory(path):
-    # Skip the Alchemist header and manually assign column names
-    df = pd.read_csv(path, skiprows=1, names=['x', 'y', 'timestamp'])
+    # Skip the Alchemist header and manually assign column names, then drop any NaN rows
+    df = pd.read_csv(path, skiprows=1, names=['x', 'y', 'timestamp']).dropna()
     return df
 
 def read_estimation(path):
-    # Skip the Alchemist header and manually assign column names
-    df = pd.read_csv(path, skiprows=1, names=['estimatedX', 'estimatedY'])
+    # Skip the Alchemist header and manually assign column names, then drop any NaN rows
+    df = pd.read_csv(path, skiprows=1, names=['estimatedX', 'estimatedY']).dropna()
     return df
 
 def generate_charts(plot_configs, charts_path):
@@ -21,15 +21,21 @@ def generate_charts(plot_configs, charts_path):
     line_colors = ['black', 'gray', 'blue', 'red', 'green', 'purple', 'orange', 'cyan', 'magenta', 'brown']
 
     for title, entities in plot_configs.items():
-        fig, ax = plt.subplots(figsize=(10, 10), constrained_layout=True)
+        fig, ax = plt.subplots(figsize=(10, 10))
 
-        # Calculate global MIN and MAX time steps to synchronize the colormap across all zebras
+        # Calculate global MIN and MAX time steps to synchronize the colormap across all zebras safely
         min_time = float('inf')
         max_time = float('-inf')
+
         for entity in entities:
             df_est = entity['estimation']
-            min_time = min(min_time, df_est.index.min())
-            max_time = max(max_time, df_est.index.max())
+            if not df_est.empty:
+                min_time = min(min_time, df_est.index.min())
+                max_time = max(max_time, df_est.index.max())
+
+        # If we couldn't find any valid time steps (e.g. empty estimations), default to 0 and 1
+        if min_time == float('inf') or pd.isna(min_time):
+            min_time, max_time = 0, 1
 
         # Initialize bounding box for axis limits
         min_x, max_x = float('inf'), float('-inf')
@@ -44,51 +50,70 @@ def generate_charts(plot_configs, charts_path):
             zebra_name = entity['name']
 
             # Plot real trajectory (dashed line)
-            ax.plot(df_true['x'], df_true['y'],
-                    label=f'Real {zebra_name}',
-                    color=line_colors[idx % len(line_colors)],
-                    linestyle='--', linewidth=2, alpha=0.5)
+            if not df_true.empty:
+                ax.plot(df_true['x'], df_true['y'],
+                        label=f'Real {zebra_name}',
+                        color=line_colors[idx % len(line_colors)],
+                        linestyle='--', linewidth=2, alpha=0.5)
+
+                # Mark start and end points
+                start_label = 'Start' if idx == 0 else None
+                end_label = 'End' if idx == 0 else None
+
+                ax.scatter(df_true['x'].iloc[0], df_true['y'].iloc[0],
+                           color='green', s=150, zorder=5, edgecolors='black', label=start_label)
+
+                ax.scatter(df_true['x'].iloc[-1], df_true['y'].iloc[-1],
+                           color='red', s=150, zorder=5, edgecolors='black', label=end_label)
 
             # Plot estimated points (scatter)
-            last_scatter = ax.scatter(
-                df_est['estimatedX'],
-                df_est['estimatedY'],
-                c=df_est.index,
-                cmap='viridis',
-                vmin=min_time,
-                vmax=max_time,
-                s=20,
-                alpha=0.8,
-                zorder=4,
-                label=f'Estimation {zebra_name}'
-            )
+            if not df_est.empty:
+                last_scatter = ax.scatter(
+                    df_est['estimatedX'],
+                    df_est['estimatedY'],
+                    c=df_est.index,
+                    cmap='viridis',
+                    vmin=min_time,
+                    vmax=max_time,
+                    s=20,
+                    alpha=0.8,
+                    zorder=4,
+                    label=f'Estimation {zebra_name}'
+                )
 
-            # Mark start and end points
-            start_label = 'Start' if idx == 0 else None
-            end_label = 'End' if idx == 0 else None
+            # --- Safely Update Bounds ---
+            valid_x, valid_y = [], []
 
-            ax.scatter(df_true['x'].iloc[0], df_true['y'].iloc[0],
-                       color='green', s=150, zorder=5, edgecolors='black', label=start_label)
+            if not df_true.empty:
+                valid_x.extend([df_true['x'].min(), df_true['x'].max()])
+                valid_y.extend([df_true['y'].min(), df_true['y'].max()])
 
-            ax.scatter(df_true['x'].iloc[-1], df_true['y'].iloc[-1],
-                       color='red', s=150, zorder=5, edgecolors='black', label=end_label)
+            if not df_est.empty:
+                valid_x.extend([df_est['estimatedX'].min(), df_est['estimatedX'].max()])
+                valid_y.extend([df_est['estimatedY'].min(), df_est['estimatedY'].max()])
 
-            # Update bounds
-            min_x = min(min_x, df_true['x'].min(), df_est['estimatedX'].min())
-            max_x = max(max_x, df_true['x'].max(), df_est['estimatedX'].max())
-            min_y = min(min_y, df_true['y'].min(), df_est['estimatedY'].min())
-            max_y = max(max_y, df_true['y'].max(), df_est['estimatedY'].max())
+            # Filter out any lingering NaNs just in case
+            valid_x = [v for v in valid_x if pd.notna(v)]
+            valid_y = [v for v in valid_y if pd.notna(v)]
+
+            if valid_x:
+                min_x = min(min_x, min(valid_x))
+                max_x = max(max_x, max(valid_x))
+            if valid_y:
+                min_y = min(min_y, min(valid_y))
+                max_y = max(max_y, max(valid_y))
 
         # Set plot cosmetics
         ax.set_title(title, fontsize=35)
         ax.set_xlabel('X (m)', fontsize=25)
         ax.set_ylabel('Y (m)', fontsize=25)
 
-        # Apply a 10% padding to bounds
-        padding_x = (max_x - min_x) * 0.1 if max_x != min_x else 10
-        padding_y = (max_y - min_y) * 0.1 if max_y != min_y else 10
-        ax.set_xlim(min_x - padding_x, max_x + padding_x)
-        ax.set_ylim(min_y - padding_y, max_y + padding_y)
+        # Apply limits only if we have found valid bounds (not infinite)
+        if min_x != float('inf') and max_x != float('-inf'):
+            padding_x = (max_x - min_x) * 0.1 if max_x != min_x else 10
+            padding_y = (max_y - min_y) * 0.1 if max_y != min_y else 10
+            ax.set_xlim(min_x - padding_x, max_x + padding_x)
+            ax.set_ylim(min_y - padding_y, max_y + padding_y)
 
         ax.grid(True, linestyle='--', alpha=0.6)
         ax.set_aspect('equal', adjustable='box')
@@ -96,31 +121,47 @@ def generate_charts(plot_configs, charts_path):
 
         # Handle Legend creation (avoiding duplicates)
         handles, labels = ax.get_legend_handles_labels()
-        by_label = dict(zip(labels, handles))
-        leg = ax.legend(by_label.values(), by_label.keys(), loc='upper center', bbox_to_anchor=(0.5, -0.15),
-                        ncol=4, fontsize=15)
+        if handles:
+            by_label = dict(zip(labels, handles))
+            leg = ax.legend(by_label.values(), by_label.keys(), loc='upper center', bbox_to_anchor=(0.5, -0.15),
+                            ncol=4, fontsize=15)
 
-        for handle in leg.legend_handles:
-            if hasattr(handle, 'set_sizes'):
-                handle.set_sizes([100])
-            elif hasattr(handle, 'set_linewidth'):
-                handle.set_linewidth(3)
+            for handle in leg.legend_handles:
+                if hasattr(handle, 'set_sizes'):
+                    handle.set_sizes([100])
+                elif hasattr(handle, 'set_linewidth'):
+                    handle.set_linewidth(3)
 
-        # Draw synchronous Colorbar
+        # Draw synchronous Colorbar only if at least one estimation scatter was plotted
         if last_scatter:
             cbar = fig.colorbar(last_scatter, ax=ax, orientation='vertical', fraction=0.046, pad=0.04)
             cbar.set_label('Time Steps', fontsize=20)
             cbar.ax.tick_params(labelsize=15)
             cbar.set_ticks([min_time, max_time])
-            cbar.set_ticklabels([str(min_time), str(max_time)])
+            cbar.set_ticklabels([str(round(min_time)), str(round(max_time))])
+
+        # Apply tight layout to fix bounding issues before saving
+        fig.tight_layout()
+
+        # --- Directory Management ---
+        # Determine if this is an isolated plot or a combined one
+        if len(entities) == 1:
+            # Create a dedicated subfolder for the single zebra
+            zebra_folder_name = entities[0]['name'].replace(" ", "_")
+            final_output_path = f"{charts_path}/{zebra_folder_name}"
+        else:
+            # Save combined plots directly in the main experiment charts folder
+            final_output_path = charts_path
+
+        Path(final_output_path).mkdir(parents=True, exist_ok=True)
 
         # Save to PNG and PDF formats
         # Ensure safe filenames by stripping LaTeX math symbols and replacing spaces
         safe_filename = title.replace(" ", "_").replace("$", "").replace("|", "").replace("=", "").replace("(", "").replace(")", "").replace(",", "").replace("-", "_").lower()
 
-        plt.savefig(f'{charts_path}/{safe_filename}.pdf', bbox_inches='tight')
-        plt.savefig(f'{charts_path}/{safe_filename}.png', bbox_inches='tight', dpi=300)
-        plt.close()
+        plt.savefig(f'{final_output_path}/{safe_filename}.pdf', bbox_inches='tight')
+        plt.savefig(f'{final_output_path}/{safe_filename}.png', bbox_inches='tight', dpi=300)
+        plt.close(fig)
 
 if __name__ == '__main__':
 
@@ -128,7 +169,6 @@ if __name__ == '__main__':
     # QUICK CONFIGURATION AREA
     # ---------------------------------------------------------
     flight_number = 1
-    zebra_ids = [35, 38]
 
     # Define the list of experiment names. These must match the subfolder names inside "data/"
     experiments = ['oneFixedSensorOneZebraNB', 'oneFixedSensorOneZebraLB']
@@ -171,6 +211,9 @@ if __name__ == '__main__':
         # Group files by (zebra_id, n) ONLY to aggregate across multiple nodes AND multiple seeds
         grouped_files = defaultdict(list)
 
+        # Track discovered zebras just for logging purposes
+        discovered_zebras = set()
+
         for file_path in all_files:
             # Extract filename from path
             filename = Path(file_path).name
@@ -180,9 +223,11 @@ if __name__ == '__main__':
                 zid, node, n, seed = match.groups()
                 zid, n = int(zid), int(n)
 
-                # Only process zebras we are interested in
-                if zid in zebra_ids:
-                    grouped_files[(zid, n)].append(file_path)
+                # Automatically process any zebra ID found in the folder
+                grouped_files[(zid, n)].append(file_path)
+                discovered_zebras.add(zid)
+
+        print(f"Discovered zebras in this experiment: {sorted(list(discovered_zebras))}")
 
         # Re-organize configurations by (n) so we can plot multiple zebras together
         scenarios = defaultdict(list)
@@ -193,12 +238,22 @@ if __name__ == '__main__':
                 dfs.append(read_estimation(f))
 
             # Mean across the index (time steps)
-            df_estimation_aggregated = pd.concat(dfs).groupby(level=0).mean()
+            # We wrap it in a try-except block just in case the concatenation is completely empty
+            try:
+                df_estimation_aggregated = pd.concat(dfs).groupby(level=0).mean()
+            except ValueError:
+                print(f"Warning: Could not aggregate estimations for Zebra {zid}. Moving to next.")
+                continue
 
             # Load the real trajectory (handling the padding with zeros like zebra_035.csv)
             z_str = str(zid).zfill(3)
             real_path = f'{real_base_path}/zebra_{z_str}.csv'
-            df_real = read_real_trajectory(real_path)
+
+            try:
+                df_real = read_real_trajectory(real_path)
+            except FileNotFoundError:
+                print(f"Warning: Real trajectory not found at '{real_path}'. Skipping Zebra {zid}.")
+                continue
 
             entity = {
                 'name': f'Zebra {zid}',
@@ -230,7 +285,7 @@ if __name__ == '__main__':
                 plot_configs[combined_title] = combined_entities
 
         if not plot_configs:
-            print(f"No matching data found in '{exp_data_path}' for Zebras: {zebra_ids}")
+            print(f"No matchable data/trajectories found in '{exp_data_path}'.")
         else:
             # Generate all charts for the current experiment
             generate_charts(plot_configs, exp_charts_path)
