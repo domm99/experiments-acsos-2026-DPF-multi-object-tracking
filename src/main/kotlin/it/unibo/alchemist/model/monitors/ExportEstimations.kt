@@ -66,7 +66,7 @@ class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val dat
 //                    hist
 //                )
             }
-            println("Export Estimations finished")
+            println("Export Estimations finished at $dataPath")
         }catch (e: Exception) {
             println(e.message)
         }
