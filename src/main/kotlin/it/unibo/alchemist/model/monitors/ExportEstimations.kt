@@ -6,9 +6,7 @@ import it.unibo.alchemist.model.Node
 import it.unibo.alchemist.model.Time
 import it.unibo.alchemist.model.molecules.SimpleMolecule
 import it.unibo.alchemist.model.positions.Euclidean2DPosition
-import it.unibo.collektive.alchemist.device.sensors.ZebraPositionHistory
-import it.unibo.filtering.Point
-import it.unibo.filtering.Particle
+import it.unibo.collektive.models.ZebraPositionHistory
 import java.io.File
 import java.util.Locale
 
@@ -23,28 +21,31 @@ fun <T> hasEstimations(node: Node<T>): Boolean {
 /**
  * Exports the estimations made by filter nodes to CSV files upon simulation completion.
  */
-class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val dataPath: String) : OutputMonitor<T, Euclidean2DPosition> {
+class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val path: String) :
+    OutputMonitor<T, Euclidean2DPosition> {
 
     override fun finished(environment: Environment<T?, Euclidean2DPosition>, time: Time, step: Long) {
-        try{
-            val outputDir = File(dataPath)
+        try {
+            val outputDir = File(path)
             if (!outputDir.exists() && !outputDir.mkdirs()) {
-                throw IllegalStateException("Cannot create output directory: $dataPath")
+                error("Cannot create output directory: $path")
             }
-            
+
             val filters = environment.nodes
                 .filter { it.contains(SimpleMolecule("Filter")) }
                 .filter { hasEstimations(it) }
 
             filters.forEach { filter ->
-                val estimations = filter.getConcentration(SimpleMolecule("Estimations")) as MutableList<ZebraPositionHistory>
+                val estimations = filter.getConcentration(
+                    SimpleMolecule("Estimations"),
+                ) as MutableList<ZebraPositionHistory>
                 val id = filter.id
                 estimations.forEach { estimation ->
                     exportToCsv(
-                        "$dataPath/estimations_zebra${estimation.zebraID}_node-${id}_n-${numberOfNeighbors}_seed-$seed.csv",
+                        "$path/estimations_zebra${estimation.zebraID}_node-${id}_n-${numberOfNeighbors}_seed-$seed.csv",
                         "estimatedX,estimatedY",
                         "%.4f,%.4f",
-                        estimation.positions.map { Line(it!!.x, it.y) }
+                        estimation.positions.map { Line(it!!.x, it.y) },
                     )
                 }
 
@@ -66,8 +67,8 @@ class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val dat
 //                    hist
 //                )
             }
-            println("Export Estimations finished at $dataPath")
-        }catch (e: Exception) {
+            println("Export Estimations finished at $path")
+        } catch (e: Exception) {
             println(e.message)
         }
     }
@@ -87,7 +88,7 @@ class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val dat
                 val line = String.format(
                     Locale.US,
                     format,
-                    *step.values
+                    *step.values,
                 )
                 out.println(line)
             }

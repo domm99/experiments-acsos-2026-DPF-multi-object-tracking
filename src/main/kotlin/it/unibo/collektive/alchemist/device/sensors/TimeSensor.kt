@@ -3,7 +3,6 @@ package it.unibo.collektive.alchemist.device.sensors
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-
 /**
  * A sensor that provides information about the simulation time.
  */

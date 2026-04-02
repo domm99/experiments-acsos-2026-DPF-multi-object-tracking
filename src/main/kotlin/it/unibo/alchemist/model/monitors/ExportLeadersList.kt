@@ -8,7 +8,8 @@ import it.unibo.alchemist.model.positions.Euclidean2DPosition
 import java.io.File
 import java.util.Locale
 
-class ExportLeadersList<T> (val seed: Double, val numberOfNeighbors: Int, val dataPath: String) : OutputMonitor<T, Euclidean2DPosition> {
+class ExportLeadersList<T>(val seed: Double, val numberOfNeighbors: Int, val dataPath: String) :
+    OutputMonitor<T, Euclidean2DPosition> {
 
     override fun finished(environment: Environment<T?, Euclidean2DPosition>, time: Time, step: Long) {
         val leader = environment.nodes
@@ -20,7 +21,7 @@ class ExportLeadersList<T> (val seed: Double, val numberOfNeighbors: Int, val da
             "$dataPath/leader_n-${numberOfNeighbors}_seed-$seed.csv",
             "leader",
             "%d",
-            listOf(Line(12), Line(leaderId))
+            listOf(Line(12), Line(leaderId)),
         )
     }
 
@@ -39,11 +40,10 @@ class ExportLeadersList<T> (val seed: Double, val numberOfNeighbors: Int, val da
                 val line = String.format(
                     Locale.US,
                     format,
-                    *step.values
+                    *step.values,
                 )
                 out.println(line)
             }
         }
     }
-
 }

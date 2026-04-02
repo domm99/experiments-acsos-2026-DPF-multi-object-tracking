@@ -11,7 +11,8 @@ import java.util.Locale
 /**
  * Exports the estimations made by filter nodes to CSV files upon simulation completion.
  */
-class ExportSensorsDeployment<T>(val seed: Double, val numberOfNeighbors: Int, val dataPath: String) : OutputMonitor<T, Euclidean2DPosition> {
+class ExportSensorsDeployment<T>(val seed: Double, val numberOfNeighbors: Int, val dataPath: String) :
+    OutputMonitor<T, Euclidean2DPosition> {
 
     override fun finished(environment: Environment<T?, Euclidean2DPosition>, time: Time, step: Long) {
         val filters = environment.nodes
@@ -32,7 +33,6 @@ class ExportSensorsDeployment<T>(val seed: Double, val numberOfNeighbors: Int, v
             "%d,%.4f,%.4f,%d",
             positions.map { Line(it.first, it.second[0], it.second[1], it.third) },
         )
-
     }
 
     /**
@@ -50,7 +50,7 @@ class ExportSensorsDeployment<T>(val seed: Double, val numberOfNeighbors: Int, v
                 val line = String.format(
                     Locale.US,
                     format,
-                    *step.values
+                    *step.values,
                 )
                 out.println(line)
             }

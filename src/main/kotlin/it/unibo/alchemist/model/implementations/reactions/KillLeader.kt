@@ -11,14 +11,12 @@ import it.unibo.alchemist.model.Position
 import it.unibo.alchemist.model.Time
 import it.unibo.alchemist.model.TimeDistribution
 import it.unibo.alchemist.model.molecules.SimpleMolecule
+import kotlin.collections.List
 import org.danilopianini.util.ListSet
 import org.danilopianini.util.ListSets
-import kotlin.collections.List
 
-class KillLeader<T, P: Position<P>> (
-    val environment: Environment<T, P>,
-    val distribution: TimeDistribution<T>
-) : GlobalReaction<T> {
+class KillLeader<T, P : Position<P>>(val environment: Environment<T, P>, val distribution: TimeDistribution<T>) :
+    GlobalReaction<T> {
 
     private var executed = false
 
@@ -61,16 +59,9 @@ class KillLeader<T, P: Position<P>> (
 
     override fun canExecute(): Boolean = true
 
-    override fun initializationComplete(
-        atTime: Time,
-        environment: Environment<T, *>,
-    ) = Unit
+    override fun initializationComplete(atTime: Time, environment: Environment<T, *>) = Unit
 
-    override fun update(
-        currentTime: Time,
-        hasBeenExecuted: Boolean,
-        environment: Environment<T, *>,
-    ) = Unit
+    override fun update(currentTime: Time, hasBeenExecuted: Boolean, environment: Environment<T, *>) = Unit
 
     override fun compareTo(other: Actionable<T>): Int = tau.compareTo(other.tau)
 
