@@ -6,8 +6,8 @@ import it.unibo.alchemist.model.NodeProperty
 import it.unibo.alchemist.model.Position
 import it.unibo.alchemist.model.molecules.SimpleMolecule
 import it.unibo.collektive.alchemist.device.sensors.LocationSensor
-import it.unibo.collektive.alchemist.device.sensors.TrackedZebra
-import it.unibo.filtering.Point
+import it.unibo.collektive.models.Point
+import it.unibo.collektive.models.TrackedZebra
 import org.apache.commons.math3.random.RandomGenerator
 
 /**
@@ -27,8 +27,7 @@ class LocationSensorProperty<T : Any, P : Position<P>>(
 ) : LocationSensor,
     NodeProperty<T> {
 
-    override fun cloneOnNewNode(node: Node<T>): NodeProperty<T> =
-        LocationSensorProperty(environment, node, random)
+    override fun cloneOnNewNode(node: Node<T>): NodeProperty<T> = LocationSensorProperty(environment, node, random)
 
     override fun coordinates(): Point {
         val position = environment.getPosition(node).coordinates
@@ -59,6 +58,4 @@ class LocationSensorProperty<T : Any, P : Position<P>>(
         val selfPos = environment.getPosition(node)
         return Point(selfPos.coordinates[0], selfPos.coordinates[1])
     }
-
 }
-
