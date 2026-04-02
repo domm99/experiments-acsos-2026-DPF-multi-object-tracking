@@ -45,9 +45,7 @@ fun Aggregate<*>.localFiltering(
             numberOfParticles,
             maxInitialSpeed,
             sideLength,
-            targets.map {
-                it.zebraID
-            }.toSet(),
+            targets.map { it.zebraID }.toSet(),
             random = device.randomGenerator,
         ),
     ) { filter ->
@@ -70,18 +68,23 @@ fun Aggregate<*>.localFiltering(
                 estimations.add(newZebra)
             }
         }
-        filter.yielding {
-            when {
-                estimationsHistory.isEmpty() || estimations.isEmpty() -> estimations
+        filter.yielding { estimationsHistory.updateHistory(estimations) }
+    }
+}
 
-                else -> estimationsHistory.map { history ->
-                    estimations.find { it.zebraID == history.zebraID }?.positions
-                        ?.let { zebraPos -> history.copy(positions = history.positions + zebraPos) }
-                        ?: history
-                }
+fun List<ZebraPositionHistory>.updateHistory(
+    estimations: MutableList<ZebraPositionHistory>,
+): List<ZebraPositionHistory> = when {
+    this.isNotEmpty() && estimations.isNotEmpty() -> {
+        this.map { history ->
+            val zebraPos = estimations.find { zebra -> zebra.zebraID == history.zebraID }?.positions
+            when {
+                zebraPos != null -> history.copy(positions = history.positions + zebraPos)
+                else -> history
             }
         }
     }
+    else -> estimations
 }
 
 private fun selectNeighbors(

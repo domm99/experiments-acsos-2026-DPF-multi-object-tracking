@@ -59,13 +59,14 @@ fun Aggregate<Int>.sensorsExecution(
                         listOfNotNull(DistanceFromPosition(selfPosition, myMeasure)),
                         isLeader,
                     ) { m1, m2 -> m1 + m2 }
-                val point: Point? = if (isLeader) {
-                    val sampledParticles = filter.resample(zebra.zebraID)
-                    val newParticles = filter.predictParticles(sampledParticles)
-                    filter.updateWeights(zebra.zebraID, newParticles, convergedMeasurements)
-                    filter.estimatePosition(zebra.zebraID)
-                } else {
-                    null
+                val point: Point? = when {
+                    isLeader -> {
+                        val sampledParticles = filter.resample(zebra.zebraID)
+                        val newParticles = filter.predictParticles(sampledParticles)
+                        filter.updateWeights(zebra.zebraID, newParticles, convergedMeasurements)
+                        filter.estimatePosition(zebra.zebraID)
+                    }
+                    else ->null
                 }
                 val oldZebraInfo = estimations.find { it.zebraID == zebra.zebraID }
                 if (point != null) {
@@ -77,21 +78,7 @@ fun Aggregate<Int>.sensorsExecution(
                 }
             }
         }
-        filter.yielding {
-            when {
-                estimationsHistory.isNotEmpty() && estimations.isNotEmpty() -> {
-                    estimationsHistory.map { history ->
-                        val zebraPos = estimations.find { zebra -> zebra.zebraID == history.zebraID }?.positions
-                        when {
-                            zebraPos != null -> history.copy(positions = history.positions + zebraPos)
-                            else -> history
-                        }
-                    }
-                }
-
-                else -> estimations
-            }
-        }
+        filter.yielding { estimationsHistory.updateHistory(estimations) }
     }
 }
 
