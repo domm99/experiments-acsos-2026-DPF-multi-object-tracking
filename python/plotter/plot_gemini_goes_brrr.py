@@ -130,7 +130,7 @@ if __name__ == '__main__':
     zebra_ids = [35, 38]
 
     # Define the list of experiment names. These must match the subfolder names inside "data/"
-    experiments = ['oneFixedSensorOneZebra']
+    experiments = ['oneFixedSensorOneZebraNB', 'oneFixedSensorOneZebraLB']
 
     base_charts_path = 'charts'
     base_data_path = 'data'
@@ -139,6 +139,7 @@ if __name__ == '__main__':
 
     # Setup regex to extract parameters from filenames
     # Example filename: estimations_zebra35_node-10_n-0_seed-42.0.csv
+    # 'n' perfectly captures the number of neighbors!
     file_pattern = re.compile(r'estimations_zebra(\d+)_node-(\d+)_n-(\d+)_seed-([\d\.]+)\.csv')
 
     # Iterate over each defined experiment
@@ -164,7 +165,8 @@ if __name__ == '__main__':
             print(f"No estimation files found in '{exp_data_path}'. Skipping...")
             continue
 
-        # Group files by (zebra_id, node, n) to aggregate across multiple seeds
+        # Group files by (zebra_id, n) ONLY to aggregate across multiple nodes AND multiple seeds
+        # Structure: {(zebra_id, n): [file1, file2, ...]}
         grouped_files = defaultdict(list)
 
         for file_path in all_files:
@@ -174,21 +176,25 @@ if __name__ == '__main__':
 
             if match:
                 zid, node, n, seed = match.groups()
-                zid, node, n = int(zid), int(node), int(n)
+                zid, n = int(zid), int(n)
 
                 # Only process zebras we are interested in
                 if zid in zebra_ids:
-                    grouped_files[(zid, node, n)].append(file_path)
+                    # By ignoring the 'node' variable in the grouping key, we automatically collect
+                    # all the nodes (and seeds) related to this specific Zebra and N neighbors count.
+                    grouped_files[(zid, n)].append(file_path)
 
-        # Re-organize configurations by (node, n) so we can plot multiple zebras together
+        # Re-organize configurations by (n) so we can plot multiple zebras together
+        # Structure: {(n): [(zebra_id, entity_dict), ...]}
         scenarios = defaultdict(list)
 
-        for (zid, node, n), files in grouped_files.items():
+        for (zid, n), files in grouped_files.items():
             dfs = []
             for f in files:
                 dfs.append(read_estimation(f))
 
-            # Aggregate multiple seeds by taking the mean across the index (time steps)
+            # Aggregate by taking the mean across the index (time steps)
+            # This replicates the old logic: averages all nodes and seeds together
             df_estimation_aggregated = pd.concat(dfs).groupby(level=0).mean()
 
             # Load the real trajectory (handling the padding with zeros like zebra_035.csv)
@@ -202,24 +208,25 @@ if __name__ == '__main__':
                 'estimation': df_estimation_aggregated
             }
 
-            scenarios[(node, n)].append((zid, entity))
+            scenarios[n].append((zid, entity))
 
         # Generate configurations for isolated and combined plots
         plot_configs = {}
 
-        for (node, n), entities_list in scenarios.items():
+        for n, entities_list in scenarios.items():
 
             combined_entities = []
 
             for zid, entity in entities_list:
                 # 1. Configuration for isolated plot
-                title = f'Zebra {zid} Node {node} N {n}'
+                # We mention that it is an aggregated plot of N neighbors
+                title = f'Zebra {zid} N {n} (Aggregated)'
                 plot_configs[title] = [entity]
                 combined_entities.append(entity)
 
             # 2. Configuration for combined plot (if more than 1 zebra is present in this scenario)
             if len(combined_entities) > 1:
-                combined_title = f'Combined Trajectories Node {node} N {n}'
+                combined_title = f'Combined Trajectories N {n} (Aggregated)'
                 plot_configs[combined_title] = combined_entities
 
         if not plot_configs:
