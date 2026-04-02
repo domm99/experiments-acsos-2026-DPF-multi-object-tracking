@@ -81,7 +81,7 @@ File(rootProject.rootDir.path + "/src/main/yaml")
     .listFiles()
     ?.filter { it.extension == "yml" }
     ?.sortedBy { it.nameWithoutExtension }
-    ?.forEach {
+    ?.forEach { it ->
         fun basetask(name: String, additionalConfiguration: JavaExec.() -> Unit = {}) = tasks.register<JavaExec>(name) {
             description = "Launches graphic simulation ${it.nameWithoutExtension}"
             mainClass.set("it.unibo.alchemist.Alchemist")
@@ -96,7 +96,7 @@ File(rootProject.rootDir.path + "/src/main/yaml")
         val capitalizedName = it.nameWithoutExtension.capitalizeString()
         val graphic by basetask("run${capitalizedName}Graphic") {
             group = alchemistGroupGraphic
-            val dataPath = "data-1n"
+            val dataPath = File("data/${it.nameWithoutExtension}").also { path -> path.mkdirs() }
             args(
                 "--override",
                 """
@@ -104,9 +104,9 @@ File(rootProject.rootDir.path + "/src/main/yaml")
                         - type: SwingGUI
                           parameters: { graphics: effects/${it.nameWithoutExtension}.json }
                         - type: it.unibo.alchemist.model.monitors.ExportEstimations
-                          parameters: [42, 0, "data"]
+                          parameters: [42, 0, "$dataPath"]
                         - type: it.unibo.alchemist.model.monitors.ExportSensorsDeployment
-                          parameters: [42, 0, "data"]
+                          parameters: [42, 0, "$dataPath"]
                 """.trimIndent(),
                 "--override",
                 "launcher: { parameters: { batch: [], autoStart: false } }",
