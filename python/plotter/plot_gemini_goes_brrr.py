@@ -115,8 +115,9 @@ def generate_charts(plot_configs, charts_path):
             cbar.set_ticklabels([str(min_time), str(max_time)])
 
         # Save to PNG and PDF formats
-        # Ensure safe filenames by replacing spaces and parentheses
-        safe_filename = title.replace(" ", "_").replace("(", "").replace(")", "").replace(",", "").lower()
+        # Ensure safe filenames by stripping LaTeX math symbols and replacing spaces
+        safe_filename = title.replace(" ", "_").replace("$", "").replace("|", "").replace("=", "").replace("(", "").replace(")", "").replace(",", "").replace("-", "_").lower()
+
         plt.savefig(f'{charts_path}/{safe_filename}.pdf', bbox_inches='tight')
         plt.savefig(f'{charts_path}/{safe_filename}.png', bbox_inches='tight', dpi=300)
         plt.close()
@@ -139,12 +140,14 @@ if __name__ == '__main__':
 
     # Setup regex to extract parameters from filenames
     # Example filename: estimations_zebra35_node-10_n-0_seed-42.0.csv
-    # 'n' perfectly captures the number of neighbors!
     file_pattern = re.compile(r'estimations_zebra(\d+)_node-(\d+)_n-(\d+)_seed-([\d\.]+)\.csv')
 
     # Iterate over each defined experiment
     for current_experiment in experiments:
         print(f"\n--- Processing Experiment: {current_experiment} ---")
+
+        # Check if this experiment is Leader Based (LB) or Neighbor Based (NB)
+        is_lb_experiment = current_experiment.endswith('LB')
 
         # Dynamically define paths for the current experiment
         exp_data_path = f'{base_data_path}/{current_experiment}'
@@ -166,7 +169,6 @@ if __name__ == '__main__':
             continue
 
         # Group files by (zebra_id, n) ONLY to aggregate across multiple nodes AND multiple seeds
-        # Structure: {(zebra_id, n): [file1, file2, ...]}
         grouped_files = defaultdict(list)
 
         for file_path in all_files:
@@ -180,12 +182,9 @@ if __name__ == '__main__':
 
                 # Only process zebras we are interested in
                 if zid in zebra_ids:
-                    # By ignoring the 'node' variable in the grouping key, we automatically collect
-                    # all the nodes (and seeds) related to this specific Zebra and N neighbors count.
                     grouped_files[(zid, n)].append(file_path)
 
         # Re-organize configurations by (n) so we can plot multiple zebras together
-        # Structure: {(n): [(zebra_id, entity_dict), ...]}
         scenarios = defaultdict(list)
 
         for (zid, n), files in grouped_files.items():
@@ -193,8 +192,7 @@ if __name__ == '__main__':
             for f in files:
                 dfs.append(read_estimation(f))
 
-            # Aggregate by taking the mean across the index (time steps)
-            # This replicates the old logic: averages all nodes and seeds together
+            # Mean across the index (time steps)
             df_estimation_aggregated = pd.concat(dfs).groupby(level=0).mean()
 
             # Load the real trajectory (handling the padding with zeros like zebra_035.csv)
@@ -217,16 +215,18 @@ if __name__ == '__main__':
 
             combined_entities = []
 
+            # Determine the suffix to use based on experiment type, applying LaTeX styling for N
+            exp_suffix = "Leader Based" if is_lb_experiment else f"Neighbor Based $|N|={n}$"
+
             for zid, entity in entities_list:
                 # 1. Configuration for isolated plot
-                # We mention that it is an aggregated plot of N neighbors
-                title = f'Zebra {zid} N {n} (Aggregated)'
+                title = f'Zebra {zid} {exp_suffix}'
                 plot_configs[title] = [entity]
                 combined_entities.append(entity)
 
-            # 2. Configuration for combined plot (if more than 1 zebra is present in this scenario)
+            # 2. Configuration for combined plot
             if len(combined_entities) > 1:
-                combined_title = f'Combined Trajectories N {n} (Aggregated)'
+                combined_title = f'Combined Trajectories {exp_suffix}'
                 plot_configs[combined_title] = combined_entities
 
         if not plot_configs:
