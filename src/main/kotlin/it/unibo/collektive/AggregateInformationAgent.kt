@@ -4,54 +4,26 @@ import it.unibo.alchemist.collektive.device.CollektiveDevice
 import it.unibo.collektive.aggregate.FieldEntry
 import it.unibo.collektive.aggregate.api.Aggregate
 import it.unibo.collektive.aggregate.api.neighboring
-import it.unibo.collektive.alchemist.device.sensors.DistanceFromPosition
-import it.unibo.collektive.alchemist.device.sensors.EnvironmentVariables
 import it.unibo.collektive.alchemist.device.sensors.LocationSensor
-import it.unibo.collektive.alchemist.device.sensors.ZebraPositionHistory
-import it.unibo.filtering.Particle
+import it.unibo.collektive.models.DistanceFromPosition
+import it.unibo.collektive.models.ZebraPositionHistory
 import it.unibo.filtering.ParticleFilter
-import it.unibo.filtering.Point
-import kotlin.collections.plus
-import kotlin.math.hypot
-import kotlin.math.log10
-import org.apache.commons.math3.random.RandomGenerator
-
-const val p0 = -40
-const val pathLoss = 2
-const val measureStdDev = 0.5
-
-fun selectNeighbors(
-    originalList: List<FieldEntry<out Any, DistanceFromPosition>>,
-    localID: Int,
-    n: Int
-): List<FieldEntry<out Any, DistanceFromPosition>> {
-    val localEntry = originalList.find { it.id == localID }
-    val localPoint = localEntry!!.value.currentPosition
-
-    return originalList
-        .filter { it.id != localID }
-        .sortedBy { entry ->
-            val targetPoint = entry.value.currentPosition
-            val dx = targetPoint.x - localPoint.x
-            val dy = targetPoint.y - localPoint.y
-            (dx * dx) + (dy * dy)
-        }
-        .take(n)
-        .let { listOf(localEntry) + it }
-}
 
 /**
  * The entrypoint of the simulation performing local information filtering.
  */
-fun Aggregate<Int>.informationFilterEntrypoint(
-    device: CollektiveDevice<*>,
-    position: LocationSensor,
-) = context(device, device.randomGenerator, position) {
-    val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
-    localFiltering(estimations, device["NumberOfParticles"], device["MaxInitialSpeed"], device["SideLength"]).also { history ->
-        device["Estimations"] = history
+fun Aggregate<Int>.informationFilterEntrypoint(device: CollektiveDevice<*>, position: LocationSensor) =
+    context(device, device.randomGenerator, position) {
+        val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
+        localFiltering(
+            estimations,
+            device["NumberOfParticles"],
+            device["MaxInitialSpeed"],
+            device["SideLength"],
+        ).also { history ->
+            device["Estimations"] = history
+        }
     }
-}
 
 /**
  * Performs local filtering using a Particle Filter to estimate the position
@@ -68,7 +40,17 @@ fun Aggregate<*>.localFiltering(
     sideLength: Double,
 ): List<ZebraPositionHistory> {
     val targets = position.targetsPosition()
-    return evolving(ParticleFilter(numberOfParticles, maxInitialSpeed, sideLength, targets.map { it.zebraID }.toSet(), random = device.randomGenerator)) { filter ->
+    return evolving(
+        ParticleFilter(
+            numberOfParticles,
+            maxInitialSpeed,
+            sideLength,
+            targets.map {
+                it.zebraID
+            }.toSet(),
+            random = device.randomGenerator,
+        ),
+    ) { filter ->
         device["NumberOfParticles"] = numberOfParticles
         val numberOfNeighbors = device.getOrDefault("NumberOfNeighbors", 0)
         val estimations = mutableListOf<ZebraPositionHistory>()
@@ -91,6 +73,7 @@ fun Aggregate<*>.localFiltering(
         filter.yielding {
             when {
                 estimationsHistory.isEmpty() || estimations.isEmpty() -> estimations
+
                 else -> estimationsHistory.map { history ->
                     estimations.find { it.zebraID == history.zebraID }?.positions
                         ?.let { zebraPos -> history.copy(positions = history.positions + zebraPos) }
@@ -101,3 +84,21 @@ fun Aggregate<*>.localFiltering(
     }
 }
 
+private fun selectNeighbors(
+    originalList: List<FieldEntry<out Any, DistanceFromPosition>>,
+    localID: Int,
+    n: Int,
+): List<FieldEntry<out Any, DistanceFromPosition>> {
+    val localEntry = originalList.find { it.id == localID }
+    val localPoint = localEntry!!.value.currentPosition
+    return originalList
+        .filter { it.id != localID }
+        .sortedBy { entry ->
+            val targetPoint = entry.value.currentPosition
+            val dx = targetPoint.x - localPoint.x
+            val dy = targetPoint.y - localPoint.y
+            (dx * dx) + (dy * dy)
+        }
+        .take(n)
+        .let { listOf(localEntry) + it }
+}

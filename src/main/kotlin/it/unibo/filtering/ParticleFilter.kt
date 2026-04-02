@@ -1,10 +1,11 @@
 package it.unibo.filtering
 
 import it.unibo.alchemist.util.RandomGenerators.nextDouble
-import it.unibo.collektive.alchemist.device.sensors.DistanceFromPosition
-import it.unibo.collektive.p0
-import it.unibo.collektive.pathLoss
-import kotlin.collections.set
+import it.unibo.collektive.PATH_LOSS
+import it.unibo.collektive.P_0
+import it.unibo.collektive.models.DistanceFromPosition
+import it.unibo.collektive.models.Particle
+import it.unibo.collektive.models.Point
 import kotlin.math.exp
 import kotlin.math.hypot
 import kotlin.math.log10
@@ -26,9 +27,9 @@ class ParticleFilter(
     val measurementStdDev: Double = 0.5,
     val random: RandomGenerator,
 ) {
-    private val particlesFor: MutableMap<Int, List<Particle>> = targetsIDs.associateWith { initParticles(sideLength) }.toMutableMap()
-
-//    private var particles: List<Particle> = initParticles(sideLength)
+    private val particlesFor: MutableMap<Int, List<Particle>> = targetsIDs.associateWith {
+        initParticles(sideLength)
+    }.toMutableMap()
 
     private fun initParticles(sideLength: Double): List<Particle> = List(numberOfParticles) {
         val x = random.nextDouble(0.0, sideLength)
@@ -43,7 +44,6 @@ class ParticleFilter(
     /**
      * Predicts the new state of the particles based on a simple motion model with added Gaussian noise.
      * @param sampledParticles The list of particles to predict from.
-     * @param stdDev The standard deviation of the Gaussian noise to add.
      * @param dt The time step for the prediction.
      * @return A new list of predicted particles.
      */
@@ -66,22 +66,21 @@ class ParticleFilter(
     /**
      * Updates the weights of the particles based on the measurement.
      * @param newParticles The list of particles to update.
-     * @param measurement The observed measurement as a Point.
+     * @param measurements The observed measurement as a Point.
      */
-    fun updateWeights(particlesID: Int, newParticles: List<Particle>, measurements: List<DistanceFromPosition>){ //sensorPosition: Point) {
-
+    fun updateWeights(particlesID: Int, newParticles: List<Particle>, measurements: List<DistanceFromPosition>) {
         var maxLogW = Double.NEGATIVE_INFINITY
         newParticles.forEach { particle ->
             var newW = 0.0
             measurements.forEach { (sensorPosition, measurement) ->
                 val d = hypot(particle.x - sensorPosition.x, particle.y - sensorPosition.y).coerceAtLeast(1.0)
-                val expectedMeasure = p0 - 10 * pathLoss * log10(d) //+ random.nextGaussian() * measureStdDev
+                val expectedMeasure = P_0 - 10 * PATH_LOSS * log10(d) // + random.nextGaussian() * measureStdDev
                 val dist = measurement - expectedMeasure
                 // P(z|x) ~ exp(-dist^2 / (2 * sigma^2)) (simplified cause we are using log to sum and not to multiply)
-                val likelihood = -(0.5 * (dist * dist) / (measurementStdDev * measurementStdDev)) //- ln(sqrt(2* PI) * measurementStdDev)
+                val likelihood = -(0.5 * (dist * dist) / (measurementStdDev * measurementStdDev))
                 newW += likelihood
             }
-            //totalWeight += newW
+            // totalWeight += newW
             particle.weight = newW
             if (newW > maxLogW) maxLogW = newW
         }
