@@ -30,27 +30,26 @@ fun fromPositionToMeasure(selfPosition: Point, sensedPosition: Point, random: Ra
  * The entrypoint of the simulation performing local information filtering.
  */
 fun Aggregate<Int>.informationFilterEntrypointLeaderBased(
-    collektiveDevice: CollektiveDevice<*>,
-    env: EnvironmentVariables,
+    device: CollektiveDevice<*>,
     position: LocationSensor,
-) = context(env, collektiveDevice.randomGenerator, position, collektiveDevice) {
+) = context(device.randomGenerator, position, device) {
 
-    val isDown = env["isDown"] as Boolean
+    val isDown = device["isDown"] as Boolean
     if(!isDown) {
-        val sideLength = env["SideLength"] as Int
-        val numberOfParticles = env["NumberOfParticles"] as Int
-        val maxInitialSpeed = env["MaxInitialSpeed"] as Double
-        val isLeader = isLeaderBasedOnLocation(sideLength).also { env["isLeader"] = it }
-        val estimations = env.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
-        with(env) {
+        val sideLength = device["SideLength"] as Int
+        val numberOfParticles = device["NumberOfParticles"] as Int
+        val maxInitialSpeed = device["MaxInitialSpeed"] as Double
+        val isLeader = isLeaderBasedOnLocation(sideLength).also { device["isLeader"] = it }
+        val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
+        with(device) {
             sensorsExecution(isLeader, estimations, numberOfParticles, maxInitialSpeed, sideLength.toDouble())
         }.also { history ->
-            env["Estimations"] = history
+            device["Estimations"] = history
         }
     }
 }
 
-context(device: CollektiveDevice<*>, position: LocationSensor, env: EnvironmentVariables)
+context(device: CollektiveDevice<*>, position: LocationSensor)
 fun Aggregate<Int>.sensorsExecution(
     isLeader: Boolean,
     estimationsHistory: List<ZebraPositionHistory>,
@@ -72,15 +71,13 @@ fun Aggregate<Int>.sensorsExecution(
         val estimations = mutableListOf<ZebraPositionHistory>()
         for (zebra in targetsPosition) {
             alignedOn(zebra.zebraID) {
-                env["Particles${zebra.zebraID}"] = filter.getAll(zebra.zebraID)
+                device["Particles${zebra.zebraID}"] = filter.getAll(zebra.zebraID)
                 val myMeasure = fromPositionToMeasure(selfPosition, zebra.position, device.randomGenerator)
-
                 val convergedMeasurements =
                     convergeCast(
                         listOfNotNull(DistanceFromPosition(selfPosition, myMeasure)),
                         isLeader
                     ) { m1, m2 -> m1 + m2 }
-
                 val point: Point? = if (isLeader) {
                     val sampledParticles = filter.resample(zebra.zebraID)
                     val newParticles = filter.predictParticles(sampledParticles)

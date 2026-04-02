@@ -44,13 +44,12 @@ fun selectNeighbors(
  * The entrypoint of the simulation performing local information filtering.
  */
 fun Aggregate<Int>.informationFilterEntrypoint(
-    collektiveDevice: CollektiveDevice<*>,
-    env: EnvironmentVariables,
+    device: CollektiveDevice<*>,
     position: LocationSensor,
-) = context(env, collektiveDevice.randomGenerator, position) {
-    val estimations = env.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
-    localFiltering(estimations, env["NumberOfParticles"], env["MaxInitialSpeed"], env["SideLength"]).also { history ->
-        env["Estimations"] = history
+) = context(device, device.randomGenerator, position) {
+    val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
+    localFiltering(estimations, device["NumberOfParticles"], device["MaxInitialSpeed"], device["SideLength"]).also { history ->
+        device["Estimations"] = history
     }
 }
 
@@ -61,7 +60,7 @@ fun Aggregate<Int>.informationFilterEntrypoint(
  * @param random the random generator for stochastic processes
  * @param position the location sensor providing target position and neighborhood data
  */
-context(random: RandomGenerator, position: LocationSensor, env: EnvironmentVariables)
+context(device: CollektiveDevice<*>, position: LocationSensor)
 fun Aggregate<*>.localFiltering(
     estimationsHistory: List<ZebraPositionHistory>,
     numberOfParticles: Int,
@@ -69,20 +68,16 @@ fun Aggregate<*>.localFiltering(
     sideLength: Double,
 ): List<ZebraPositionHistory> {
     val targets = position.targetsPosition()
-    return evolving(ParticleFilter(numberOfParticles, maxInitialSpeed, sideLength, targets.map { it.zebraID }.toSet(), random = random)) { filter ->
-//        val previous = env.getOrDefault("Particles", mutableListOf<List<Particle>>())
-        env["NumberOfParticles"] = numberOfParticles
-//        previous.add(filter.getAll()) // TODO - this is redundant
-//        env["Particles"] = previous
-        val numberOfNeighbors = env.getOrDefault("NumberOfNeighbors", 0)
+    return evolving(ParticleFilter(numberOfParticles, maxInitialSpeed, sideLength, targets.map { it.zebraID }.toSet(), random = device.randomGenerator)) { filter ->
+        device["NumberOfParticles"] = numberOfParticles
+        val numberOfNeighbors = device.getOrDefault("NumberOfNeighbors", 0)
         val estimations = mutableListOf<ZebraPositionHistory>()
         for (zebra in targets) {
             alignedOn(zebra.zebraID) {
                 val sampledParticles = filter.resample(zebra.zebraID)
                 val newParticles = filter.predictParticles(sampledParticles)
                 val selfPosition = position.selfPosition()
-                val distance = hypot(zebra.position.x - selfPosition.x, zebra.position.y - selfPosition.y)
-                val measure = p0 - 10 * pathLoss * log10(distance) + random.nextGaussian() * measureStdDev
+                val measure = fromPositionToMeasure(selfPosition, zebra.position, device.randomGenerator)
                 val info = neighboring(DistanceFromPosition(selfPosition, measure)).all.list
                 val neighborsInfo = selectNeighbors(info, localId as Int, numberOfNeighbors).map { it.value }
                 filter.updateWeights(zebra.zebraID, newParticles, neighborsInfo)
@@ -95,17 +90,14 @@ fun Aggregate<*>.localFiltering(
         }
         filter.yielding {
             when {
-                estimationsHistory.isNotEmpty() && estimations.isNotEmpty() -> {
-                    estimationsHistory.map { history ->
-                        val zebraPos = estimations.find { zebra -> zebra.zebraID == history.zebraID }?.positions
-                        when {
-                            zebraPos != null -> history.copy(positions = history.positions + zebraPos)
-                            else -> history
-                        }
-                    }
+                estimationsHistory.isEmpty() || estimations.isEmpty() -> estimations
+                else -> estimationsHistory.map { history ->
+                    estimations.find { it.zebraID == history.zebraID }?.positions
+                        ?.let { zebraPos -> history.copy(positions = history.positions + zebraPos) }
+                        ?: history
                 }
-                else -> estimations
             }
         }
     }
 }
+
