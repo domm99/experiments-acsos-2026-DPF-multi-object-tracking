@@ -2,12 +2,14 @@ package it.unibo.collektive
 
 import it.unibo.alchemist.collektive.device.CollektiveDevice
 import it.unibo.collektive.aggregate.api.Aggregate
+import it.unibo.collektive.aggregate.api.neighborhood
+import it.unibo.collektive.aggregate.ids
 import it.unibo.collektive.alchemist.device.sensors.LocationSensor
 import it.unibo.collektive.models.DistanceFromPosition
 import it.unibo.collektive.models.Point
 import it.unibo.collektive.models.ZebraPositionHistory
 import it.unibo.collektive.stdlib.accumulation.convergeCast
-import it.unibo.collektive.stdlib.consensus.boundedElection
+import it.unibo.collektive.stdlib.election.isClosestToCentroid
 import it.unibo.filtering.ParticleFilter
 
 /**
@@ -20,10 +22,9 @@ fun Aggregate<Int>.informationFilterEntrypointLeaderBased(device: CollektiveDevi
             val sideLength = device["SideLength"] as Int
             val numberOfParticles = device["NumberOfParticles"] as Int
             val maxInitialSpeed = device["MaxInitialSpeed"] as Double
-            val isLeader = isLeaderBasedOnLocation(sideLength).also { device["isLeader"] = it }
             val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
             with(device) {
-                sensorsExecution(isLeader, estimations, numberOfParticles, maxInitialSpeed, sideLength.toDouble())
+                sensorsExecution(estimations, numberOfParticles, maxInitialSpeed, sideLength.toDouble())
             }.also { history ->
                 device["Estimations"] = history
             }
@@ -32,7 +33,6 @@ fun Aggregate<Int>.informationFilterEntrypointLeaderBased(device: CollektiveDevi
 
 context(device: CollektiveDevice<*>, position: LocationSensor)
 fun Aggregate<Int>.sensorsExecution(
-    isLeader: Boolean,
     estimationsHistory: List<ZebraPositionHistory>,
     numberOfParticles: Int,
     maxInitialSpeed: Double,
@@ -40,6 +40,7 @@ fun Aggregate<Int>.sensorsExecution(
 ): List<ZebraPositionHistory> {
     val targetsPosition = position.targetsPosition()
     val selfPosition = position.selfPosition()
+    val isLeader = isClosestToCentroid(sideLength.toInt()).also { device["isLeader"] = it }
     return evolving(
         ParticleFilter(
             numberOfParticles,
@@ -54,6 +55,7 @@ fun Aggregate<Int>.sensorsExecution(
             alignedOn(zebra.zebraID) {
                 device["Particles${zebra.zebraID}"] = filter.getAll(zebra.zebraID)
                 val myMeasure = fromPositionToMeasure(selfPosition, zebra.position, device.randomGenerator)
+//                val isLeader = isClosestToCentroid(sideLength.toInt()).also { device["isLeaderOf${zebra.zebraID}"] = it }
                 val convergedMeasurements =
                     convergeCast(
                         listOfNotNull(DistanceFromPosition(selfPosition, myMeasure)),
@@ -82,9 +84,3 @@ fun Aggregate<Int>.sensorsExecution(
     }
 }
 
-context(device: CollektiveDevice<*>, position: LocationSensor)
-fun Aggregate<Int>.isLeaderBasedOnLocation(bound: Int): Boolean {
-    val dist = device.environment.distanceFromNetworkCentroid(position.coordinates())
-    val weight = centralityWeight(dist, bound / 2.0) // the highest, the closest to the center
-    return boundedElection(strength = weight, bound = bound) == localId
-}
