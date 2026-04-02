@@ -57,16 +57,16 @@ class CollektiveDevice<P>(
 
     private fun receiveMessage(time: Time, message: Message<Int, *>) {
         when (shouldLoose(lossProbability)) {
-            true -> validMessages
+            true -> validMessages += message.senderId to TimedMessage(time, message)
             else -> validMessages += message.senderId to TimedMessage(time, message)
         }
     }
 
     /**
-     * Determines whether a message should be lost based on a 10% loss probability.
+     * Determines whether a message should be lost based on a 5% loss probability.
      * @return true if the message is lost, false otherwise
      */
-    private fun shouldLoose(lossProbability: Double = 0.1): Boolean = randomGenerator.nextDouble() < lossProbability
+    private fun shouldLoose(lossProbability: Double = 0.05): Boolean = randomGenerator.nextDouble() < lossProbability
 
     /**
      * Returns the distances to the neighboring nodes.
