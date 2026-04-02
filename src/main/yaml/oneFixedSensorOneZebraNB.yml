@@ -3,7 +3,7 @@ incarnation: collektive
 variables:
   numberOfParticles: &numberOfParticles 250
   maxInitialSpeed: &maxInitialSpeed 2.0
-  neighboringDistance: &neighboringDistance 50.0
+  neighboringDistance: &neighboringDistance 250.0
   numberOfNeighbors: &numberOfNeighbors
     type: ArbitraryVariable
     parameters: [ 5, [0, 1, 2, 4, 7] ]
@@ -12,9 +12,9 @@ variables:
   size: &size 150
   seed: &seed
     min: 0
-    max: 2
+    max: 5
     step: 1
-    default: 4
+    default: 42
 
 network-model:
   type: ConnectWithinDistance
@@ -27,6 +27,14 @@ _movementZebra35: &movementZebra35
       - type: MoveNode
         parameters:
           - "zebras-trajectories/flights/flight_1_zebras/zebra_035.csv"
+
+_movementZebra37: &movementZebra37
+  - time-distribution: 1
+    type: Event
+    actions:
+      - type: MoveNode
+        parameters:
+          - "zebras-trajectories/flights/flight_1_zebras/zebra_037.csv"
 
 _movementZebra38: &movementZebra38
   - time-distribution: 1
@@ -48,6 +56,10 @@ deployments:
     parameters: [ 0, 0 ]
     programs:
       - *movementZebra35
+  - type: Point
+    parameters: [ 0, 0 ]
+    programs:
+      - *movementZebra37
   - type: Point
     parameters: [ 0, 0 ]
     programs:
@@ -75,15 +87,13 @@ deployments:
 
 launcher:
   parameters:
-    batch: [ seed ]
+    batch: [ seed, numberOfNeighbors ]
     showProgress: true
     autoStart: true
 
 monitors:
   - type: it.unibo.alchemist.model.monitors.ExportEstimations
     parameters: [*seed, *numberOfNeighbors, *dataPath]
-#  - type: it.unibo.alchemist.model.monitors.ExportSensorsDeployment
-#    parameters: [*seed, *numberOfNeighbors, *dataPath]
 
 terminate:
   type: AfterTime

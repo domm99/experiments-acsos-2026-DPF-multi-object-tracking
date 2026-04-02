@@ -7,11 +7,7 @@ variables:
   numberOfNeighbors: &numberOfNeighbors 0
   stepLength: &stepLength 30
   dataPath: &dataPath "data/oneFixedSensorOneZebraLB/"
-  startX: &startX -70
-  endX: &endX 50
-  startY: &startY -10
-  endY: &endY 100
-  size: &size 120
+  size: &size 150
   seed: &seed
     min: 0
     max: 5
@@ -69,7 +65,7 @@ deployments:
 #  - type: Point
 #    parameters: [15, 15]
   - type: Grid
-    parameters: [ *startX, *startY, *endX, *endY, *stepLength, *stepLength, 2, 2 ]
+    parameters: [ -70, -10, 100, 100, *stepLength, *stepLength, 1, 1 ]
     contents:
       - molecule: Filter
         concentration: true
