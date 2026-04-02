@@ -1,6 +1,4 @@
-package it.unibo.collektive.alchemist.device.sensors
-
-import it.unibo.filtering.Point
+package it.unibo.collektive.models
 
 /**
  * Ground-truth information about a zebra tracked in the simulator.

@@ -1,4 +1,4 @@
-package it.unibo.filtering
+package it.unibo.collektive.models
 
 import kotlin.math.hypot
 
