@@ -84,7 +84,7 @@ fun List<ZebraPositionHistory>.updateHistory(
             }
         }
     }
-    else -> estimations
+    else -> this + estimations
 }
 
 private fun selectNeighbors(
