@@ -8,7 +8,7 @@ variables:
     type: ArbitraryVariable
     parameters: [ 0, [0, 1, 2, 4, 7] ]
   stepLength: &stepLength 30
-  dataPath: &dataPath "data/oneFixedSensorOneZebra/"
+  dataPath: &dataPath "data/oneFixedSensorOneZebraLB/"
   size: &size 150
   seed: &seed
     min: 0
