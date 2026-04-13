@@ -44,6 +44,16 @@ _movementZebra38: &movementZebra38
         parameters:
           - "zebras-trajectories/flights/flight_1_zebras/zebra_038.csv"
 
+_sensorMovement: &sensorMovement
+  - time-distribution: 2
+    type: Event
+    actions:
+      - type: MoveSensorsInSwarm
+        parameters:
+          - 4 # number of rows in the grid of sensors
+          - 6 # number of columns in the grid of sensors
+          - *stepLength # spacing
+
 _pool: &program
   - time-distribution: 1
     type: Event
@@ -54,14 +64,23 @@ _pool: &program
 deployments:
   - type: Point
     parameters: [ 0, 0 ]
+    contents:
+      - molecule: Zebra
+        concentration: true
     programs:
       - *movementZebra35
   - type: Point
     parameters: [ 0, 0 ]
+    contents:
+      - molecule: Zebra
+        concentration: true
     programs:
       - *movementZebra37
   - type: Point
     parameters: [ 0, 0 ]
+    contents:
+      - molecule: Zebra
+        concentration: true
     programs:
       - *movementZebra38
 #  - type: Point
@@ -81,7 +100,7 @@ deployments:
         concentration: *numberOfNeighbors
       - molecule: isDown
         concentration: false
-    programs: *program
+    programs: [*program, *sensorMovement]
     properties:
       - type: it.unibo.collektive.alchemist.device.sensors.impl.LocationSensorProperty
 
