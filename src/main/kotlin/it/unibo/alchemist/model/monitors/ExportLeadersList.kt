@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package it.unibo.alchemist.model.monitors
 
 import it.unibo.alchemist.boundary.OutputMonitor

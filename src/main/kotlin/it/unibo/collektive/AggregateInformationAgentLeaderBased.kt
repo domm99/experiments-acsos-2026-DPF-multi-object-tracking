@@ -68,7 +68,8 @@ fun Aggregate<Int>.sensorsExecution(
                         filter.updateWeights(zebra.zebraID, newParticles, convergedMeasurements)
                         filter.estimatePosition(zebra.zebraID)
                     }
-                    else ->null
+
+                    else -> null
                 }
                 val oldZebraInfo = estimations.find { it.zebraID == zebra.zebraID }
                 if (point != null) {
@@ -83,4 +84,3 @@ fun Aggregate<Int>.sensorsExecution(
         filter.yielding { estimationsHistory.updateHistory(estimations) }
     }
 }
-

@@ -1,3 +1,5 @@
+@file:Suppress("TooGenericExceptionCaught")
+
 package it.unibo.alchemist.model.monitors
 
 import it.unibo.alchemist.boundary.OutputMonitor
@@ -48,24 +50,6 @@ class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val pat
                         estimation.positions.map { Line(it!!.x, it.y) },
                     )
                 }
-
-//                val numberOfParticles = filter.getConcentration(SimpleMolecule("NumberOfParticles")) as Int
-//                val particles =
-//                    filter.getConcentration(SimpleMolecule("Particles")) as MutableList<MutableList<Particle>>
-//                val header =
-//                    (0 until numberOfParticles).joinToString(",") { "p_$it-X,p_$it-Y,p_$it-vX,p_$it-vY,p_$it-W" }
-//                val format = (0 until numberOfParticles).joinToString(",") { "%.4f,%.4f,%.4f,%.4f,%.4f" }
-//                val hist = particles.map { particleList ->
-//                    val coordinates =
-//                        particleList.flatMap { listOf(it.x, it.y, it.vx, it.vy, it.weight) }.toTypedArray()
-//                    Line(*coordinates)
-//                }
-//                exportToCsv(
-//                    "$dataPath/particles_node-${id}_n-${numberOfNeighbors}_seed-$seed.csv",
-//                    header,
-//                    format,
-//                    hist
-//                )
             }
             println("Export Estimations finished at $path")
         } catch (e: Exception) {

@@ -9,8 +9,13 @@ import it.unibo.alchemist.model.molecules.SimpleMolecule
 import it.unibo.alchemist.model.positions.Euclidean2DPosition
 import kotlin.math.sqrt
 
-class MoveSensorsInSwarm <T>(environment: Environment<T, Euclidean2DPosition>, node: Node<T>, val gridRows: Int, val gridColumns: Int, val spacing: Double) :
-    AbstractMoveNode<T, Euclidean2DPosition>(environment, node, true){
+class MoveSensorsInSwarm<T>(
+    environment: Environment<T, Euclidean2DPosition>,
+    node: Node<T>,
+    val gridRows: Int,
+    val gridColumns: Int,
+    val spacing: Double,
+) : AbstractMoveNode<T, Euclidean2DPosition>(environment, node, true) {
 
     private fun getCentroid(positions: List<Euclidean2DPosition>): Euclidean2DPosition {
         if (positions.isEmpty()) return Euclidean2DPosition(0.0, 0.0)
@@ -23,7 +28,6 @@ class MoveSensorsInSwarm <T>(environment: Environment<T, Euclidean2DPosition>, n
     }
 
     override fun getNextPosition(): Euclidean2DPosition {
-
         val zebras = environment.nodes.filter { it.contains(SimpleMolecule("Zebra")) }
         val currentPos = environment.getPosition(node)
         val targetPos = getCentroid(zebras.map { environment.getPosition(it) })
@@ -50,12 +54,10 @@ class MoveSensorsInSwarm <T>(environment: Environment<T, Euclidean2DPosition>, n
 
         return Euclidean2DPosition(
             currentPos.x + (dx / distance) * stepSize,
-            currentPos.y + (dy / distance) * stepSize
+            currentPos.y + (dy / distance) * stepSize,
         )
-
     }
 
     override fun cloneAction(p0: Node<T?>?, p1: Reaction<T?>?): Action<T?> =
         MoveSensorsInSwarm(environment, node, gridRows, gridColumns, spacing)
-
 }
