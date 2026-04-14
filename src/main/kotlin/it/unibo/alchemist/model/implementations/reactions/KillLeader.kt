@@ -71,6 +71,7 @@ class KillLeader<T, P : Position<P>>(val environment: Environment<T, P>, val dis
      *
      * If already executed once, this method is a no-op.
      */
+    @Suppress("UNCHECKED_CAST")
     fun executeBeforeUpdateDistribution() {
         if (!executed) {
             executed = true
