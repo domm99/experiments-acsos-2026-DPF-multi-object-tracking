@@ -1,3 +1,19 @@
+## [1.0.1](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/compare/1.0.0...1.0.1) (2026-04-14)
+
+### Bug Fixes
+
+* image name as repo name ([689aa0c](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/689aa0cdb7fb37e938b787671399d6de5b6d3f61))
+* update root project name to lower case ([fcc55b9](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/fcc55b9d481e47c5ecb2d02c99d20cec1e31069c))
+
+### General maintenance
+
+* less seed ([db9f6a1](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/db9f6a174555f99c5d077cd200ab9ca0d0fea351))
+* **release:** update gradle.properties .env versions to 1.0.0 [skip ci] ([480931c](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/480931c5df6d70d9be9aeddfc0dae288c8441b12))
+
+### Refactoring
+
+* update docker images name to match the project name from settings ([1bd3897](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/1bd3897a734d713d2525ffc5a60b3b09436c02f6))
+
 ## 1.0.0 (2026-04-14)
 
 ### Features
