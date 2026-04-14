@@ -140,14 +140,15 @@ class ParticleFilter(
      * @return A new list of resampled particles with reset weights.
      */
     fun resample(sampleID: Int): List<Particle> {
-        if (particlesFor[sampleID].isNullOrEmpty()) particlesFor[sampleID] = initParticles(sideLength)
+        val particles = particlesFor[sampleID].takeUnless { it.isNullOrEmpty() }
+            ?: initParticles(sideLength).also { particlesFor[sampleID] = it }
         val newParticles = ArrayList<Particle>(numberOfParticles)
-        val totalWeight = (particlesFor[sampleID] ?: initParticles(sideLength)).sumOf { it.weight }
-        if (totalWeight == 0.0) return particlesFor[sampleID]!!
+        val totalWeight = particles.sumOf { it.weight }
+        if (totalWeight == 0.0) return particles
         val cumulativeWeights = DoubleArray(numberOfParticles)
         var currentSum = 0.0
         for (i in 0 until numberOfParticles) {
-            currentSum += particlesFor[sampleID]!![i].weight
+            currentSum += particles[i].weight
             cumulativeWeights[i] = currentSum / totalWeight
         }
         cumulativeWeights[numberOfParticles - 1] = 1.0
@@ -161,7 +162,7 @@ class ParticleFilter(
                     break
                 }
             }
-            val p = particlesFor[sampleID]!![selectedIndex]
+            val p = particles[selectedIndex]
             newParticles.add(
                 Particle(
                     x = p.x,
@@ -184,10 +185,11 @@ class ParticleFilter(
      * @return Estimated 2D position.
      */
     fun estimatePosition(sampleID: Int): Point {
-        if (particlesFor[sampleID].isNullOrEmpty()) particlesFor[sampleID] = initParticles(sideLength)
+        val particles = particlesFor[sampleID].takeUnless { it.isNullOrEmpty() }
+            ?: initParticles(sideLength).also { particlesFor[sampleID] = it }
         var x = 0.0
         var y = 0.0
-        for (p in particlesFor[sampleID]!!) {
+        for (p in particles) {
             x += p.x * p.weight
             y += p.y * p.weight
         }
