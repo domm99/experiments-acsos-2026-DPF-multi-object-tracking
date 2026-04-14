@@ -34,6 +34,7 @@ class CollektiveDevice<P>(
     EnvironmentVariables where P : Position<P> {
 
     private data class TimedMessage(val receivedAt: Time, val payload: Message<Int, *>)
+
     @Suppress("MagicNumber")
     private val lossProbability: Double = 0.1
     override val inMemory: Boolean = true

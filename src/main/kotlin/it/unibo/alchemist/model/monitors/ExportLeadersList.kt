@@ -28,5 +28,4 @@ class ExportLeadersList<T>(val seed: Double, val numberOfNeighbors: Int, val dat
             listOf(Line(12), Line(leader.id)),
         )
     }
-
 }

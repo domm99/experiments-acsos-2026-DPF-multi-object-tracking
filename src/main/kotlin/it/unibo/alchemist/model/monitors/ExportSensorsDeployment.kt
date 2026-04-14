@@ -36,5 +36,4 @@ class ExportSensorsDeployment<T>(val seed: Double, val numberOfNeighbors: Int, v
             positions.map { Line(it.first, it.second[0], it.second[1], it.third) },
         )
     }
-
 }

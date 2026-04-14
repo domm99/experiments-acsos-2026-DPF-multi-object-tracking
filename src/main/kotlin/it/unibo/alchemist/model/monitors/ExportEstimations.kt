@@ -65,5 +65,4 @@ class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val pat
             println(e.message)
         }
     }
-
 }

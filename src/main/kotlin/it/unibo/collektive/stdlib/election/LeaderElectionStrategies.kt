@@ -1,3 +1,6 @@
+@file:Suppress("UndocumentedPublicFunction") // detekt does not support context parameters,
+// the documentation is present
+
 package it.unibo.collektive.stdlib.election
 
 import it.unibo.alchemist.collektive.device.CollektiveDevice
@@ -7,7 +10,6 @@ import it.unibo.collektive.centralityWeight
 import it.unibo.collektive.distanceFromNetworkCentroid
 import it.unibo.collektive.stdlib.consensus.boundedElection
 
-context(device: CollektiveDevice<*>, position: LocationSensor)
 /**
  * Elects a leader by favoring devices closer to the network centroid.
  *
@@ -20,6 +22,7 @@ context(device: CollektiveDevice<*>, position: LocationSensor)
  * @param bound Election bound (maximum id-space/window used by [boundedElection]).
  * @return `true` if this device is elected as leader, `false` otherwise.
  */
+context(device: CollektiveDevice<*>, position: LocationSensor)
 fun Aggregate<Int>.isClosestToCentroid(bound: Int): Boolean {
     val dist = device.environment.distanceFromNetworkCentroid(position.coordinates())
     val weight = centralityWeight(dist, bound / 2.0) // the highest, the closest to the center

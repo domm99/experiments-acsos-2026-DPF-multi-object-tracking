@@ -1,9 +1,10 @@
+@file:Suppress("UndocumentedPublicFunction") // detekt does not support context parameters,
+// the documentation is present
+
 package it.unibo.collektive
 
 import it.unibo.alchemist.collektive.device.CollektiveDevice
 import it.unibo.collektive.aggregate.api.Aggregate
-import it.unibo.collektive.aggregate.api.neighborhood
-import it.unibo.collektive.aggregate.ids
 import it.unibo.collektive.alchemist.device.sensors.LocationSensor
 import it.unibo.collektive.models.DistanceFromPosition
 import it.unibo.collektive.models.Point
@@ -31,7 +32,6 @@ fun Aggregate<Int>.informationFilterEntrypointLeaderBased(device: CollektiveDevi
         }
     }
 
-context(device: CollektiveDevice<*>, position: LocationSensor)
 /**
  * Runs one sensing/filtering round and returns updated zebra estimation histories.
  * 1. Read currently visible target positions and local position;
@@ -50,6 +50,7 @@ context(device: CollektiveDevice<*>, position: LocationSensor)
  * @param sideLength Simulation area side length used for initialization and election bound.
  * @return Updated zebra position history list.
  */
+context(device: CollektiveDevice<*>, position: LocationSensor)
 fun Aggregate<Int>.sensorsExecution(
     estimationsHistory: List<ZebraPositionHistory>,
     numberOfParticles: Int,
@@ -76,7 +77,7 @@ fun Aggregate<Int>.sensorsExecution(
 //             val isLeader = isClosestToCentroid(sideLength.toInt()).also { device["isLeaderOf${zebra.zebraID}"] = it }
                 val convergedMeasurements =
                     convergeCast(
-                        listOfNotNull(DistanceFromPosition(selfPosition, myMeasure)),
+                        listOf(DistanceFromPosition(selfPosition, myMeasure)),
                         isLeader,
                     ) { m1, m2 -> m1 + m2 }
                 val point: Point? = when {

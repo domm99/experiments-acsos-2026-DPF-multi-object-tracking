@@ -1,3 +1,6 @@
+@file:Suppress("UndocumentedPublicFunction") // detekt does not support context parameters,
+// the documentation is present
+
 package it.unibo.collektive
 
 import it.unibo.alchemist.collektive.device.CollektiveDevice
@@ -25,7 +28,6 @@ fun Aggregate<Int>.informationFilterEntrypoint(device: CollektiveDevice<*>, posi
         }
     }
 
-context(device: CollektiveDevice<*>, position: LocationSensor)
 /**
  * Performs local filtering using a Particle Filter to estimate the position
  * of a target based on neighborhood information.
@@ -33,6 +35,7 @@ context(device: CollektiveDevice<*>, position: LocationSensor)
  * @param random the random generator for stochastic processes
  * @param position the location sensor providing target position and neighborhood data
  */
+context(device: CollektiveDevice<*>, position: LocationSensor)
 fun Aggregate<*>.localFiltering(
     estimationsHistory: List<ZebraPositionHistory>,
     numberOfParticles: Int,
@@ -87,9 +90,9 @@ fun List<ZebraPositionHistory>.updateHistory(
             }
         }
     }
+
     else -> this + estimations
 }
-
 
 /**
  * Selects up to [n] closest neighbor entries to the local device and includes local entry.
@@ -106,8 +109,10 @@ private fun selectNeighbors(
     localID: Int,
     n: Int,
 ): List<FieldEntry<out Any, DistanceFromPosition>> {
-    val localEntry = originalList.find { it.id == localID }
-    val localPoint = localEntry!!.value.currentPosition
+    val localEntry = requireNotNull(originalList.find { it.id == localID }) {
+        "Local entry with id $localID not found"
+    }
+    val localPoint = localEntry.value.currentPosition
     return originalList
         .filter { it.id != localID }
         .sortedBy { entry ->

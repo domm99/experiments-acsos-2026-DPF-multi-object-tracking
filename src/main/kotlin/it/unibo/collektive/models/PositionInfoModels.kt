@@ -6,10 +6,7 @@ package it.unibo.collektive.models
  * @property zebraID Unique identifier of the zebra.
  * @property position Current true position of the zebra.
  */
-data class TrackedZebra(
-    val zebraID: Int,
-    val position: Point,
-)
+data class TrackedZebra(val zebraID: Int, val position: Point)
 
 /**
  * Couples a reference position with a scalar distance value.
@@ -20,10 +17,7 @@ data class TrackedZebra(
  * @property currentPosition Position of the reference point (e.g., sensor).
  * @property distance Measured distance from [currentPosition] to the target.
  */
-data class DistanceFromPosition(
-    val currentPosition: Point,
-    val distance: Double,
-)
+data class DistanceFromPosition(val currentPosition: Point, val distance: Double)
 
 /**
  * Ordered position history for a specific zebra.
@@ -31,7 +25,4 @@ data class DistanceFromPosition(
  * @property zebraID Unique identifier of the zebra whose trajectory is stored.
  * @property positions Recorded trajectory points, in chronological order.
  */
-data class ZebraPositionHistory(
-    val zebraID: Int,
-    val positions: List<Point>,
-)
+data class ZebraPositionHistory(val zebraID: Int, val positions: List<Point>)
