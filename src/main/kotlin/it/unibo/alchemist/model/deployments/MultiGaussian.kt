@@ -4,6 +4,19 @@ import it.unibo.alchemist.model.Environment
 import it.unibo.alchemist.model.Position
 import org.apache.commons.math3.random.RandomGenerator
 
+/**
+ * Deployment that samples node positions from multiple 2D Gaussian clusters.
+ *
+ * For each node, one center is chosen uniformly at random from [centers], then
+ * a Gaussian offset with standard deviation [stddev] is applied on both axes.
+ *
+ * @param P the position type supported by the target environment
+ * @param environment the environment where nodes are deployed
+ * @param randomGenerator random source used for center selection and Gaussian sampling
+ * @param nodes number of nodes to place
+ * @param centers list of 2D centers, each encoded as `[x, y]`
+ * @param stddev standard deviation of the Gaussian noise on x and y
+ */
 class MultiGaussian<P : Position<P>>(
     environment: Environment<Any, P>,
     randomGenerator: RandomGenerator,

@@ -37,4 +37,11 @@ operator fun Point.plus(other: Point): Point = Point(this.x + other.x, this.y + 
  */
 operator fun Point.div(scalar: Double): Point = Point(this.x / scalar, this.y / scalar)
 
+/**
+ * Computes the Euclidean distance between this point and [other].
+ *
+ * @receiver Source point.
+ * @param other Destination point.
+ * @return Euclidean distance between the two points.
+ */
 fun Point.distanceTo(other: Point): Double = hypot(this.x - other.x, this.y - other.y)

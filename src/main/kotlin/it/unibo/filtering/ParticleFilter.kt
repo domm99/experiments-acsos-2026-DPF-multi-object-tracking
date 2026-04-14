@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package it.unibo.filtering
 
 import it.unibo.alchemist.util.RandomGenerators.nextDouble
@@ -31,6 +33,16 @@ class ParticleFilter(
         initParticles(sideLength)
     }.toMutableMap()
 
+    /**
+     * Creates an initial particle cloud uniformly in position and velocity.
+     *
+     * - Position: `x,y ~ U(0, sideLength)`
+     * - Velocity: `vx,vy ~ U(-maxInitialSpeed, maxInitialSpeed)`
+     * - Weight: uniform (`1 / numberOfParticles`)
+     *
+     * @param sideLength Side length of the square initialization area.
+     * @return A newly initialized list of particles.
+     */
     private fun initParticles(sideLength: Double): List<Particle> = List(numberOfParticles) {
         val x = random.nextDouble(0.0, sideLength)
         val y = random.nextDouble(0.0, sideLength)
@@ -39,6 +51,14 @@ class ParticleFilter(
         Particle(x, y, vx, vy, 1.0 / numberOfParticles)
     }
 
+    /**
+     * Returns the current particle population for a target id.
+     *
+     * If no population exists yet, a new one is returned.
+     *
+     * @param sampleID Target/sample identifier.
+     * @return The particles currently associated with `sampleID`, or a freshly initialized set.
+     */
     fun getAll(sampleID: Int): List<Particle> = particlesFor[sampleID] ?: initParticles(sideLength)
 
     /**
@@ -64,9 +84,19 @@ class ParticleFilter(
     }
 
     /**
-     * Updates the weights of the particles based on the measurement.
-     * @param newParticles The list of particles to update.
-     * @param measurements The observed measurement as a Point.
+     * Updates and normalizes particle weights for a target id given sensor measurements.
+     *
+     * For each particle and each measurement:
+     * - compute geometric distance from particle to sensor
+     * - derive expected RSS-like value via `P_0 - 10 * PATH_LOSS * log10(d)`
+     * - accumulate log-likelihood under a Gaussian noise model
+     *
+     * To improve numerical stability, the method subtracts the maximum log-weight before exponentiation.
+     * If all resulting weights degenerate to zero, weights are reset to a uniform distribution.
+     *
+     * @param particlesID Target/sample identifier whose population is being updated.
+     * @param newParticles Predicted particles to reweight.
+     * @param measurements Sensor measurements `(sensorPosition, measuredValue)`.
      */
     fun updateWeights(particlesID: Int, newParticles: List<Particle>, measurements: List<DistanceFromPosition>) {
         var maxLogW = Double.NEGATIVE_INFINITY
@@ -106,31 +136,24 @@ class ParticleFilter(
     }
 
     /**
-     * Resamples particles based on their weights using systematic resampling.
+     * Resamples particles for a [sampleID] according to their normalized weights.
      * @return A new list of resampled particles with reset weights.
      */
     fun resample(sampleID: Int): List<Particle> {
         if (particlesFor[sampleID].isNullOrEmpty()) particlesFor[sampleID] = initParticles(sideLength)
         val newParticles = ArrayList<Particle>(numberOfParticles)
         val totalWeight = (particlesFor[sampleID] ?: initParticles(sideLength)).sumOf { it.weight }
-
         if (totalWeight == 0.0) return particlesFor[sampleID]!!
-
         val cumulativeWeights = DoubleArray(numberOfParticles)
         var currentSum = 0.0
-
         for (i in 0 until numberOfParticles) {
             currentSum += particlesFor[sampleID]!![i].weight
             cumulativeWeights[i] = currentSum / totalWeight
         }
-
         cumulativeWeights[numberOfParticles - 1] = 1.0
-
         val resetWeight = 1.0 / numberOfParticles
-
         repeat(numberOfParticles) {
             val r = random.nextDouble()
-
             var selectedIndex = 0
             for (j in 0 until numberOfParticles) {
                 if (r <= cumulativeWeights[j]) {
@@ -138,7 +161,6 @@ class ParticleFilter(
                     break
                 }
             }
-
             val p = particlesFor[sampleID]!![selectedIndex]
             newParticles.add(
                 Particle(
@@ -150,13 +172,16 @@ class ParticleFilter(
                 ),
             )
         }
-
         return newParticles
     }
 
     /**
-     * Estimates the current position based on the weighted average of the particles.
-     * @return The estimated position as a Point.
+     * Computes the current state estimate for a target id as a weighted mean of particles.
+     *
+     * If no particles are available yet for the id, a new population is initialized first.
+     *
+     * @param sampleID Target/sample identifier.
+     * @return Estimated 2D position.
      */
     fun estimatePosition(sampleID: Int): Point {
         if (particlesFor[sampleID].isNullOrEmpty()) particlesFor[sampleID] = initParticles(sideLength)

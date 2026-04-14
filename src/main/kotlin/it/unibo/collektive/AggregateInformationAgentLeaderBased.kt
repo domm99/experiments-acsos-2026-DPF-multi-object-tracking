@@ -32,6 +32,24 @@ fun Aggregate<Int>.informationFilterEntrypointLeaderBased(device: CollektiveDevi
     }
 
 context(device: CollektiveDevice<*>, position: LocationSensor)
+/**
+ * Runs one sensing/filtering round and returns updated zebra estimation histories.
+ * 1. Read currently visible target positions and local position;
+ * 2. Elect a leader;
+ * 3. Maintain a persistent [ParticleFilter] via `evolving(...)`;
+ * 4. For each target zebra:
+ *    align computation by zebra id,
+ *    collect local noisy measure,
+ *    aggregate neighborhood measurements through [convergeCast] toward the leader,
+ *    if leader, perform particle filter cycle: resample -> predict -> update -> estimate.
+ * 5. Merge current-round estimates with prior [estimationsHistory] and return the updated history.
+ *
+ * @param estimationsHistory Previously accumulated estimation history.
+ * @param numberOfParticles Particle count used by the filter.
+ * @param maxInitialSpeed Max initial particle velocity component.
+ * @param sideLength Simulation area side length used for initialization and election bound.
+ * @return Updated zebra position history list.
+ */
 fun Aggregate<Int>.sensorsExecution(
     estimationsHistory: List<ZebraPositionHistory>,
     numberOfParticles: Int,
@@ -55,7 +73,7 @@ fun Aggregate<Int>.sensorsExecution(
             alignedOn(zebra.zebraID) {
                 device["Particles${zebra.zebraID}"] = filter.getAll(zebra.zebraID)
                 val myMeasure = fromPositionToMeasure(selfPosition, zebra.position, device.randomGenerator)
-//                val isLeader = isClosestToCentroid(sideLength.toInt()).also { device["isLeaderOf${zebra.zebraID}"] = it }
+//             val isLeader = isClosestToCentroid(sideLength.toInt()).also { device["isLeaderOf${zebra.zebraID}"] = it }
                 val convergedMeasurements =
                     convergeCast(
                         listOfNotNull(DistanceFromPosition(selfPosition, myMeasure)),

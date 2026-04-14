@@ -9,6 +9,13 @@ import it.unibo.alchemist.model.molecules.SimpleMolecule
 import it.unibo.alchemist.model.positions.Euclidean2DPosition
 import kotlin.math.sqrt
 
+/**
+ * Moves sensor nodes as a swarm arranged on a grid centered on the zebra group centroid.
+ *
+ * @property gridRows number of rows in the sensor grid formation
+ * @property gridColumns number of columns in the sensor grid formation
+ * @property spacing distance between adjacent grid positions
+ */
 class MoveSensorsInSwarm<T>(
     environment: Environment<T, Euclidean2DPosition>,
     node: Node<T>,

@@ -15,9 +15,24 @@ import kotlin.collections.List
 import org.danilopianini.util.ListSet
 import org.danilopianini.util.ListSets
 
+/**
+ * Global reaction that simulates a one-time leader failure in the environment.
+ *
+ * On first execution, it searches for the node whose `"isLeader"` concentration is `true`,
+ * then marks it as down (`"isDown" = true`) and no longer leader (`"isLeader" = false`).
+ * Subsequent executions do not repeat this state change.
+ *
+ * @param T Concentration type used by the simulation.
+ * @param P Position type used by the environment.
+ * @property environment Simulation environment containing all nodes.
+ * @property distribution Time distribution driving this reaction scheduling.
+ */
 class KillLeader<T, P : Position<P>>(val environment: Environment<T, P>, val distribution: TimeDistribution<T>) :
     GlobalReaction<T> {
 
+    /**
+     * Guard flag ensuring leader shutdown is performed once.
+     */
     private var executed = false
 
     override var actions: List<Action<T>> = mutableListOf()
@@ -47,6 +62,15 @@ class KillLeader<T, P : Position<P>>(val environment: Environment<T, P>, val dis
         distribution.update(timeDistribution.getNextOccurence(), true, rate, environment)
     }
 
+    /**
+     * Performs the one-shot leader failure transition.
+     *
+     * First matching node with `"isLeader" == true` is updated:
+     * - `"isDown"` set to `true`
+     * - `"isLeader"` set to `false`
+     *
+     * If already executed once, this method is a no-op.
+     */
     fun executeBeforeUpdateDistribution() {
         if (!executed) {
             executed = true
@@ -65,7 +89,9 @@ class KillLeader<T, P : Position<P>>(val environment: Environment<T, P>, val dis
 
     override fun compareTo(other: Actionable<T>): Int = tau.compareTo(other.tau)
 
-    // Utility methods
+    /**
+     * Utility accessor returning all environment nodes as a list.
+     */
     private val nodes: List<Node<T>>
         get() =
             environment.nodes
