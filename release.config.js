@@ -1,9 +1,10 @@
 var prepareCmd = `
 echo version=\${nextRelease.version} > gradle.properties
 echo VERSION="\${nextRelease.version}" > .env
-echo PROJECT_NAME=$(grep -Po 'rootProject\\s*\\.\\s*name\\s*=\\s*"\\K[\\w-]+(?=")' settings.gradle.kts) >> .env
+echo PROJECT_NAME=$(grep -Po 'rootProject\\s*\\.\\s*name\\s*=\\s*"\\K[\\w-]+(?=")' settings.gradle.kts | tr '[:upper:]' '[:lower:]') >> .env
 docker compose build
 `
+
 var publishCmd = `
 docker compose push
 git add gradle.properties .env
