@@ -1,39 +1,39 @@
-# Object Tracking Using (Distributed) Particle Filters)
+# TODO TITLE
 
+This artifact is associated with the regular paper article submitted in the Main Track of the ACSOS 2026 conference.
 
-## Experiment 1: Centralized Particle Filter
+### Authors
+Anonimized for double-blind review.
 
-In this scenario, 
- a node moves through a 2D space following a trajectory defined by a function `f(x)` 
-(e.g., `f(x) = x + sin(x)`). 
-A second node, acting as an observer, 
- attempts to estimate the moving node’s position over time using a centralized particle filter. 
-To run the simulation, simply execute:
+[//]: # ()
+[//]: # (| **Angela Cortecchia** &#40;*&#41;  | **Davide Domini** &#40;*&#41;  | **Giovanni Ciatto**&#40;*&#41;   | **Roberto Casadei**&#40;*&#41; | **Mirko Viroli** &#40;*&#41;  |)
 
-```bash
-./gradlew runTrackMovementCentralizedGraphic
-```
+[//]: # (|:--------------------------:|:----------------------:|--------------------------|------------------------|:---------------------:|)
 
-## Generate charts 
-```bash
-python3 plotter/plot_movement.py
-```
+[//]: # (| angela.cortecchia@unibo.it | davide.domini@unibo.it | giovanni.ciatto@unibo.it | roby.casadei@unibo.it  | mirko.viroli@unibo.it |)
 
-# Distributed Particle Filter in Aggregate Computing
+[//]: # ()
+[//]: # (&#40;*&#41;)
+
+[//]: # (*Department of Computer Science and Engineering )
+
+[//]: # (Alma Mater Studiorum --- Università di Bologna - Cesena, Italy*)
 
 ### Table of Contents
 - [About](#about)
-    - [Experiments](#experiments)
+    * [Experiments](#experiments)
 - [Getting Started](#getting-started)
     - [Requirements](#requirements)
     - [Limitations](#limitations)
+    - [Understanding the experiments](#understanding-the-experiments)
+    - [Walk-through the experiments](#walk-through-the-experiments)
     - [Reproduce the entire experiment](#reproduce-the-entire-experiment)
         * [Simulation Graphical Interface](#simulation-graphical-interface)
         * [Extremely quick-start of a basic experiment -- `(ba|z|fi)?sh` users only](#extremely-quick-start-of-a-basic-experiment----bazfish-users-only)
         * [Reproduce the experiments through Gradle](#reproduce-the-experiments-through-gradle)
         * [Changing experiment's parameters](#changing-experiments-parameters)
-    - [Project Structure](#project-structure)
-    - [Simulation Entrypoints](#simulation-entrypoints)
+        * [Project structure](#project-structure)
+        * [Simulation entrypoint](#simulation-entrypoint)
     - [Reproduce the experiment results](#reproduce-the-experiment-results)
         * [Reproduce the experiments with containers (recommended)](#reproduce-the-experiments-with-containers-recommended)
         * [Reproduce natively](#reproduce-natively)
@@ -41,26 +41,44 @@ python3 plotter/plot_movement.py
 
 ## About
 
-TODO
+TODO ABSTRACT
 
 ### Experiments
 
-TODO
+The repository currently contains three main experiment configurations and two smaller support scenarios:
 
-## Getting started
+- `fixedSensorsNB`: fixed sensor grid, neighbor-based filtering, batch sweep on `numberOfNeighbors` in `[0, 1, 2, 4, 7]`.
+- `fixedSensorsLB`: fixed sensor grid, leader-based filtering, one elected leader performs the aggregation/update step.
+- `movingSensorsNB`: neighbor-based filtering with the sensor grid moving as a swarm around the zebra centroid.
+
+## Getting Started
 
 ### Requirements
 
-In order to successfully download and execute the graphical experiments are needed:
+In order to successfully download and execute the graphical experiments, you will need:
+
 - Internet connection;
 - [Git](https://git-scm.com);
-- Linux, macOS and Windows systems capable of running [Java](https://www.oracle.com/java/technologies/javase/jdk19-archive-downloads.html) 17 (or higher);
-- 4GB free space on disk (the system will automatically download its dependencies through Gradle);
-- GPU with minimal OpenGL capabilities (OpenGL 2.0);
-- 4GB RAM.
+- Linux, macOS, or Windows;
+- [Java](https://adoptium.net/) 17 or newer;
+- about 4GB of free disk space for Gradle dependencies and generated outputs;
+- GPU with basic OpenGL support for the Alchemist graphical interface;
+- at least 4GB of RAM for interactive runs, and preferably more for batch executions.
 
-The project uses [Gradle](https://gradle.org) as a build tool,
-and all the project dependencies are listed in the `gradle\libs.versions.toml` file.
+To reproduce the result-processing pipeline natively, you will also need:
+
+- Python `3.14.0` recommended, matching `.python-version`;
+- `pip` to install the dependencies listed in `requirements.txt`.
+
+To use the container-based workflow, you will additionally need:
+
+- [Docker](https://www.docker.com/);
+- Docker Compose.
+
+The project uses the [Gradle](https://gradle.org) wrapper included in the repository,
+so a separate Gradle installation is not required.
+The main JVM dependencies are declared in `gradle/libs.versions.toml`,
+and the simulation tasks are generated automatically from the YAML files in `src/main/yaml`.
 
 ### Limitations
 
@@ -69,7 +87,27 @@ and all the project dependencies are listed in the `gradle\libs.versions.toml` f
   We suggest running the experiments in "graphic mode" to have a better understanding of the simulation;
 - On different monitor types with different resolutions, the graphical interface could appear a bit different;
 - "batch mode" does not show any graphical interface;
-- For GUI interpretation, please refer to the [Simulation Graphical Interface](#simulation-graphical-interface) section.
+- For GUI interpretation, please refer to the [Simulation Graphical Interface](#simulation-graphical-interface) section;
+- Due to Alchemist's limitations, the graphical interface will not appear if run on a docker container.
+
+### Understanding the experiments
+
+Each main experiment combines the same building blocks:
+
+- zebra trajectories are replayed by the custom `MoveNode` action from CSV files in `src/main/resources/zebras-trajectories/`;
+- filter nodes run an aggregate program declared in the YAML file;
+- the aggregate program uses the `ParticleFilter` implementation in `src/main/kotlin/it/unibo/filtering/ParticleFilter.kt`;
+- exported estimates are written to `data/<experiment-name>/estimations_zebra<id>_node-<id>_n-<neighbors>_seed-<seed>.csv`.
+
+The important difference between the main configurations is how information is combined:
+
+- in `fixedSensorsNB`, each sensor keeps a fixed position and fuses its own information with a bounded number of nearby neighbors;
+- in `fixedSensorsLB`, sensors stay fixed as well, but the update step is centralized on the elected leader of the current aggregate neighborhood;
+- in `movingSensorsNB`, the sensing grid follows the centroid of the zebras, so the observation geometry changes over time.
+
+### Walk-through the experiments
+
+TODO
 
 ### Reproduce the entire experiment
 
@@ -77,9 +115,18 @@ and all the project dependencies are listed in the `gradle\libs.versions.toml` f
 
 #### Simulation Graphical Interface
 
-The simulation environment and graphical interface are provided by [Alchemist Simulator](https://alchemistsimulator.github.io/index.html).
+The simulation environment and graphical interface are provided by
+[Alchemist Simulator](https://alchemistsimulator.github.io/index.html).
 To understand how to interact with the GUI,
-please refer to the [Alchemist documentation](https://alchemistsimulator.github.io/reference/swing/index.html#shortcuts).
+please refer to the
+[Alchemist Swing documentation](https://alchemistsimulator.github.io/reference/swing/index.html#shortcuts).
+
+The JSON files under `effects/` define the visual overlays used by the supported graphic runs.
+At the moment, effect files are available for:
+
+- `fixedSensorsLB`
+- `fixedSensorsNB`
+- `movingSensorsNB`
 
 #### Extremely quick-start of a basic experiment -- `(ba|z|fi)?sh` users only
 
@@ -87,10 +134,16 @@ please refer to the [Alchemist documentation](https://alchemistsimulator.github.
 - `curl` must be installed
 - run:
 ```bash
-# gradient example
-curl https://raw.githubusercontent.com/angelacorte/collektive-stdlib-experiments/master/run-gossip.sh | bash 
+# Fixed Sensors Leader Based experiment with default parameters and graphical interface
+curl https://raw.githubusercontent.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/refs/heads/master/fixed-sensors-leader-based.sh | bash 
 ```
 - the repository is in your `Downloads` folder for further inspection.
+
+or
+```bash
+# Moving Sensors Neighbors Based experiment with default parameters and graphical interface
+curl https://raw.githubusercontent.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/refs/heads/master/moving-sensors-neighbors-based.sh | bash 
+```
 
 #### Reproduce the experiments through Gradle
 
@@ -98,8 +151,8 @@ curl https://raw.githubusercontent.com/angelacorte/collektive-stdlib-experiments
    Use the [Gradle/Java compatibility matrix](https://docs.gradle.org/current/userguide/compatibility.html) to learn which is the compatible version range.
    The Version of Gradle used in this experiment can be found in the gradle-wrapper.properties file located in the gradle/wrapper folder.
 2. Open a terminal
-3. Clone this repository on your pc with `git clone https://github.com/angelacorte/collektive-stdlib-experiments`.
-4. Move into the root folder with `cd collektive-examples`
+3. Clone this repository on your pc with `git clone https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking`.
+4. Move into the root folder with `cd experiments-acsos-2026-DPF-multi-object-tracking`
 5. Depending on the platform, run the following command:
     - Bash compatible (Linux, Mac OS X, Git Bash, Cygwin): ``` ./gradlew run<ExperimentName>Graphic ```
     - Windows native (cmd.exe, Powershell): ``` gradlew.bat run<ExperimentName>Graphic ```
@@ -109,20 +162,78 @@ curl https://raw.githubusercontent.com/angelacorte/collektive-stdlib-experiments
 **NOTES:**
 - Due to Alchemist's limitations, the graphical interface will not appear if run on a docker container.
 - The tasks *in graphic mode* will run the experiments with the default parameters.
+- Graphic tasks run with the default parameters defined in the YAML.
+
+**Note** that before each experiment command, it can be optionally set the `MAX_SEED` environment variable to a specific value to run the experiment,
+since that parameter is relevant only for batch experiments,
+it is suggested to not specify it or set it to `0` for the graphical experiments.
+
+Depending on the platform, there may be different ways to set the environment variable:
+- If you're using Bash compatible (Linux, Mac OS X, Git Bash, Cygwin): ```MAX_SEED=0 ./gradlew run<ExperimentName>Graphic```
+- If you're using Command Prompt (cmd.exe): ```set MAX_SEED=0 && gradlew.bat run<ExperimentName>Graphic```
+- If you're using PowerShell: ```$env:MAX_SEED = 0; .\gradlew.bat run<ExperimentName>Graphic``` \
+  For the sake of simplicity, we will show Bash compatible commands below.
+  Moreover, due to Alchemist's limitations, the graphical interface will not appear if run on a docker container.
+
+The corresponding YAML simulation files to the experiments cited above are the following,
+- _fixedSensorsLB_
+- _fixedSensorsNB_
+- _movingSensorsNB_
+
+**Notes:**
+- due to Alchemist limitations, the graphical interface is intended for local/native execution rather than containerized runs.
 
 #### Changing experiment's parameters
-To change the parameters of the experiments, you can modify the **YAML** files located in the `src/main/yaml` folder.
+
+To change the parameters of the experiments, edit the YAML files in `src/main/yaml/`.
+
+The parameters you will most likely tune are:
+
+- `numberOfParticles`
+- `maxInitialSpeed`
+- `neighboringDistance`
+- `numberOfNeighbors`
+- `stepLength`
+- `seed`
 
 Each change in the parameters will result in a different setup and execution of the experiment.
+The parameters provided in the YAML files are the ones used for the evaluation and the ones evaluated as "optimal."
 
-For further information about the YAML structure,
-please refer to the [Alchemist documentation](https://alchemistsimulator.github.io/reference/yaml/index.html).
+For more information about the simulation DSL,
+please refer to the
+[Alchemist YAML documentation](https://alchemistsimulator.github.io/reference/yaml/index.html).
 
-## Project Structure
+#### Project structure
 
-TODO
+The project is currently organized as follows:
 
-## Simulation Entrypoints
+```text
+experiments-acsos-2026-DPF-multi-object-tracking/ 
+├── python/                # Plotting utilities
+├── docker/                 # Dockerfiles to build containers
+├── effects/                # Json specification for Alchemist's GUI visualization
+├── gradle/                 # Gradle wrapper files
+├── src/
+│   └── main/
+│     ├──kotlin/it/unibo/     # Kotlin source code for the experiments
+|     │   ├── alchemist       # Alchemist's model and global reactions
+│     │   │   └── collektive/device # Collektive device integration for Alchemist
+│     │   ├──collektive/
+│     │   │   ├──alchemist/device/sensors/  # Sensors for the experiments, including random generator and time sensor
+│     │   │   ├──model/            # Utilities   
+│     │   │   ├──stdlib/           # Leader election strategies  
+│     │   │   ├──experiments/      # Entrypoints for the experiments
+│     │   └──filtering/            # Particle filter implementation
+│     ├── resources/               # Stores the zebra trajectories used within the simulations;
+│     └── yaml/                    # YAML files for the experiments specification
+```
+
+#### Simulation entrypoint
+
+The main aggregate entrypoints used right now are:
+
+- `it.unibo.collektive.AggregateInformationAgentKt.informationFilterEntrypoint`
+- `it.unibo.collektive.AggregateInformationAgentLeaderBasedKt.informationFilterEntrypointLeaderBased`
 
 TODO
 
@@ -130,23 +241,20 @@ TODO
 
 **WARNING**: re-running the whole experiment may take a very long time on a normal computer.
 
-To collect the data for the analysis and the charts,
-the experiments have to be run in "batch mode,"
-which means that the experiments are run without the graphical interface,
-and with different combinations of parameters.
-Running the experiments in batch mode in a normal computer may take a very long time (e.g., days),
-depending on the available hardware.
-Moreover,
-be sure that the YAML file of the experiment you want to run in batch mode
-is properly configured with the desired parameters.
+For the current project status, result reproduction means:
+
+- running the batch simulations so that CSV estimations are exported under `data/`;
+- post-processing those CSV files with the Python scripts under `python/plotter/`;
+- optionally adapting the plotting scripts to the exact set of experiments you want to compare.
 
 #### Reproduce the experiments with containers (recommended)
 
 1. Install [Docker](https://www.docker.com/products/docker-desktop) and [docker-compose](https://docs.docker.com/compose/install/);
 2. Run `docker-compose up` in the root folder of the repository:
    this will build the Docker images and run the containers needed to run the experiments.
-3. From the `docker-compose.yml` file, you can see that eight separate containers will be created, one for each experiment, and the data will be collected in the `data` folder.
+3. From the `docker-compose.yml` file, you can see that three separate containers will be created, one for each experiment, and the data will be collected in the `data` folder.
    Note that the `volumes` field has to be updated to match your local environment.
+   You may need to adjust the `volumes` paths to match your machine.
 
 #### Reproduce natively
 
@@ -169,7 +277,7 @@ is properly configured with the desired parameters.
 1. Make sure you have Python 3.10 or higher installed.
 2. The data folder structure should be the following:
     ```txt
-    collektive-examples/
+    experiments-acsos-2026-DPF-multi-object-tracking/
     ├── data/
     │   ├── <experiment-name>/
     │   ├── <experiment-name2>/
@@ -182,7 +290,7 @@ is properly configured with the desired parameters.
     ```
 4. Run the script to process the data and generate the charts (this process may take some time):
     ```bash
-    python plotter_all.py
+    python plot.py
     ```
 5. The charts will be generated in the `charts` folder.
 6. If you want to regenerate the charts, you can run the script again.
