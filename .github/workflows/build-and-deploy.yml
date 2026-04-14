@@ -22,47 +22,47 @@ jobs:
           deploy-command: true
           should-run-codecov: false
           should-validate-wrapper: ${{ contains('Linux', runner.os) }}
-  create-charts:
+#  create-charts:
+#    runs-on: ubuntu-24.04
+#    concurrency:
+#      group: charts${{ github.workflow }}${{ matrix.os }}${{ github.event.number || github.ref }}
+#      cancel-in-progress: true
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+#      - uses: actions/cache@v4
+#        with:
+#          path: ~/.cache/pip
+#          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+#          restore-keys: |
+#            ${{ runner.os }}-pip-
+#      - name: Install python
+#        uses: actions/setup-python@v6.1.0
+#      - name: Upgrade pip
+#        run: pip install --upgrade pip --user
+#      - name: Install requirements
+#        run: pip install -r requirements.txt --user
+#      - name: Prepare charts folder
+#        run: mkdir -p charts
+#      - name: Generate charts
+#        run: python python/plotter/plot_gemini_goes_brrr.py
+#      - name: Generate archive
+#        run: tar --use-compress-program zstd -cf charts.tar.zst charts/
+#      - name: Upload charts
+#        uses: actions/upload-artifact@v5.0.0
+#        with:
+#          name: charts
+#          path: charts.tar.zst
+  check-simulations-docker:
     runs-on: ubuntu-24.04
     concurrency:
-      group: charts${{ github.workflow }}${{ matrix.os }}${{ github.event.number || github.ref }}
+      group: container-check${{ github.workflow }}${{ matrix.os }}${{ github.event.number || github.ref }}
       cancel-in-progress: true
     steps:
-      - name: Checkout
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - name: Install python
-        uses: actions/setup-python@v6.1.0
-      - name: Upgrade pip
-        run: pip install --upgrade pip --user
-      - name: Install requirements
-        run: pip install -r requirements.txt --user
-      - name: Prepare charts folder
-        run: mkdir -p charts
-      - name: Generate charts
-        run: python process.py
-      - name: Generate archive
-        run: tar --use-compress-program zstd -cf charts.tar.zst charts/
-      - name: Upload charts
-        uses: actions/upload-artifact@v5.0.0
-        with:
-          name: charts
-          path: charts.tar.zst
-  #  check-simulations-docker:
-  #    runs-on: ubuntu-24.04
-  #    concurrency:
-  #      group: container-check${{ github.workflow }}${{ matrix.os }}${{ github.event.number || github.ref }}
-  #      cancel-in-progress: true
-  #    steps:
-  #    - name: Checkout
-  #      uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
-  #    - name: Run compose
-  #      run: docker-compose up --build
+    - name: Checkout
+      uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+    - name: Run compose
+      run: docker-compose up --build
   release:
     needs:
       - check-simulations-native
@@ -95,11 +95,11 @@ jobs:
         uses: actions/setup-node@v6.0.0
         with:
           node-version: ${{ steps.node-version.outputs.version }}
-#      - name: Login to dockerhub
-#        env:
-#          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-#          DOCKER_USERNAME: ${{ github.repository_owner }}
-#        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin docker.io
+      - name: Login to dockerhub
+        env:
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_USERNAME: angelacortecchia
+        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin docker.io
       - name: Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -111,7 +111,7 @@ jobs:
     needs:
       # - create-charts
       - check-simulations-native
-      #      - check-simulations-docker
+      - check-simulations-docker
       - release
     if: >-
       always() && (
