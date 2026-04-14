@@ -17,9 +17,9 @@ config.plugins.push(
         "publishCmd": publishCmd,
     }],
     ["@semantic-release/github", {
-        "assets": [ 
-            { "path": "charts.tar.zst" },
-         ]
+        // "assets": [
+        //     { "path": "charts.tar.zst" },
+        //  ]
     }],
     "@semantic-release/git",
 )
