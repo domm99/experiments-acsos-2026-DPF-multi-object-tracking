@@ -1,0 +1,107 @@
+incarnation: collektive
+
+variables:
+  numberOfParticles: &numberOfParticles 250
+  maxInitialSpeed: &maxInitialSpeed 2.0
+  neighboringDistance: &neighboringDistance 250.0
+  numberOfNeighbors: &numberOfNeighbors
+    type: ArbitraryVariable
+    parameters: [ 5, [0, 1, 2, 4, 7] ]
+  stepLength: &stepLength 30
+  dataPath: &dataPath "data/fixedSensorsNB/"
+  size: &size 150
+  seed: &seed
+    min: 0
+    max: 5
+    step: 1
+    default: 42
+
+network-model:
+  type: ConnectWithinDistance
+  parameters: [*neighboringDistance]
+
+_movementZebra35: &movementZebra35
+  - time-distribution: 1
+    type: Event
+    actions:
+      - type: MoveNode
+        parameters:
+          - "zebras-trajectories/flights/flight_1_zebras/zebra_035.csv"
+
+_movementZebra37: &movementZebra37
+  - time-distribution: 1
+    type: Event
+    actions:
+      - type: MoveNode
+        parameters:
+          - "zebras-trajectories/flights/flight_1_zebras/zebra_037.csv"
+
+_movementZebra38: &movementZebra38
+  - time-distribution: 1
+    type: Event
+    actions:
+      - type: MoveNode
+        parameters:
+          - "zebras-trajectories/flights/flight_1_zebras/zebra_038.csv"
+
+_pool: &program
+  - time-distribution: 1
+    type: Event
+    actions:
+      - type: RunCollektiveProgram
+        parameters: [ it.unibo.collektive.AggregateInformationAgentKt.informationFilterEntrypoint ]
+
+deployments:
+  - type: Point
+    parameters: [ 0, 0 ]
+    contents:
+      - molecule: Zebra
+        concentration: true
+    programs:
+      - *movementZebra35
+  - type: Point
+    parameters: [ 0, 0 ]
+    contents:
+      - molecule: Zebra
+        concentration: true
+    programs:
+      - *movementZebra37
+  - type: Point
+    parameters: [ 0, 0 ]
+    contents:
+      - molecule: Zebra
+        concentration: true
+    programs:
+      - *movementZebra38
+  - type: Grid
+    parameters: [ -70, -10, 100, 100, *stepLength, *stepLength, 1, 1 ]
+    contents:
+      - molecule: Filter
+        concentration: true
+      - molecule: NumberOfParticles
+        concentration: *numberOfParticles
+      - molecule: MaxInitialSpeed
+        concentration: *maxInitialSpeed
+      - molecule: SideLength
+        concentration: *size
+      - molecule: NumberOfNeighbors
+        concentration: *numberOfNeighbors
+      - molecule: isDown
+        concentration: false
+    programs: [ *program ]
+    properties:
+      - type: it.unibo.collektive.alchemist.device.sensors.impl.LocationSensorProperty
+
+launcher:
+  parameters:
+    batch: [ seed, numberOfNeighbors ]
+    showProgress: true
+    autoStart: true
+
+monitors:
+  - type: it.unibo.alchemist.model.monitors.ExportEstimations
+    parameters: [*seed, *numberOfNeighbors, *dataPath]
+
+terminate:
+  type: AfterTime
+  parameters: 1400.0
