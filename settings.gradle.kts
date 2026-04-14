@@ -11,4 +11,4 @@ develocity {
     }
 }
 
-rootProject.name = "experiments-acsos-2026-DPF-multi-object-tracking"
+rootProject.name = "experiments-acsos-2026-dpf-multi-object-tracking"
