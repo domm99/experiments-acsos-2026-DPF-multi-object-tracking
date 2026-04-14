@@ -1,3 +1,95 @@
+## 1.0.0 (2026-04-14)
+
+### Features
+
+* add check-simulations-docker job to build and run Docker containers ([f256ca6](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/f256ca658aa5696f3af1da826fcd1c280975b3a1))
+* add configuration files for oneFixedSensorOneZebraNB with movement and deployment settings ([a978c04](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/a978c049cfb9304bf3c2b983989c0148dfac51c2))
+* add data models for tracked zebra and position history ([2010dd2](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/2010dd291e0efa873cb77430cf2bb1eb5bcf64ce))
+* add fixedSensorsNB configuration and data files ([e0486a8](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/e0486a8f9a102bf2d707080ef77e2baf4b202958))
+* add plotters ([6ca116b](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/6ca116b1e5b7672016f979769482be106fa22962))
+* add plotting script for zebra trajectory visualization and estimation comparison ([c7edc5f](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/c7edc5fa82f1fc9d426fba07a7956f9ed94203b3))
+* add scripts for running fixed and moving sensors simulations ([fd6e252](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/fd6e2521247c63781ddf28fc47a304503820ec00))
+* add simulation with one zebra and one fixed sensor ([54b8bc8](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/54b8bc8d798704f29c5b3b39c073bc3bdc41b507))
+* add swarm movement for sensors in simulations spec ([7f074f2](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/7f074f26ab1d344ad505837e5191e5686a467b10))
+* add zebra ID from file name to molecule ([8e0a17d](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/8e0a17df8a013ca5b1b5876e6d1e58eddcd31e66))
+* add zebras data ([1612632](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/1612632d7f2ac66228a3766afa3fa4042b4d677e))
+* add zebras trajectories ([b5dbd95](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/b5dbd958f888b5043ef03ec0ed351d7c9f4952a6))
+* enhance filename safety and improve experiment title formatting ([abd9c5a](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/abd9c5a9a65a2cbb8b9fabbab698ae06f01b8a27))
+* enhance plotting script to support multiple zebra experiments and aggregate estimations ([b512dec](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/b512dec0267205b8f775be075a96cc1a3e5c4059))
+* enhance sensorsExecution to utilize ZebraPositionHistory for tracking of zebras ([aa601d5](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/aa601d5bb98fea91c9a83707f6af120343388c30))
+* ensure output directory creation for estimation exports ([5d08f4e](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/5d08f4e517040815b930102b94b5f4cf37fe484b))
+* implement move node that loads the trajectory from a specified csv ([d40ac2b](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/d40ac2b25c3c8b3c99ca51e5cfee181d9944894b))
+* implement swarm movement for sensors ([0989bcc](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/0989bcc7a2cfa9e9de7c925e3270b8ec5963ce07))
+* include data path in export completion message for better clarity ([80f336d](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/80f336d2584ddf0c0c11348a8f7319c42e6f2cf9))
+* move measures for distance calculations and centrality weight into proper file ([0771f50](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/0771f507af531a5c99c9bd60bedb8fdcd3058b42))
+* refactor ParticleFilter to support multiple target IDs and improve particle management ([c778355](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/c778355432856f531fd3ddae5b307307fe0ef0c4))
+* remove export configuration for CSV data in oneFixedSensorOneZebra.yml ([4e87b4f](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/4e87b4f68b9bab863884605513eb9302cd89a55a))
+* rename configuration files and update data path for oneFixedSensorOneZebraLB ([e1a3a97](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/e1a3a973ec1916124d798ba73905e4ac738226a3))
+* update configuration for data path and parameters ([aa24121](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/aa241216a3258c09e7ae5249e2b886a52faa0865))
+* update configuration for zebra tracking and movement parameters ([699aff3](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/699aff3dbc5bb14385f17c20d0ae041191691843))
+* update data path handling in build script for dynamic directory creation ([c1fd820](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/c1fd820593856c45ce0cfc9c1ae990f305b61d36))
+* update docker-compose and Dockerfile for simulations ([678c105](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/678c105495f2837f3116a0c9057f4ac255102f40))
+* update estimations handling to use ZebraPositionHistory and export CSV for each zebra ([e8ea8e0](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/e8ea8e0475e6c40996236132f39f5d320e5decd5))
+* update localFiltering to handle ZebraPositionHistory and improve neighbor selection ([d28ee19](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/d28ee191b873d27eec84ddf0c8efca594311a799))
+* update simulation parameters and molecule types for zebra integration ([fe6bdda](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/fe6bdda3dad750296c53f48836e7a0f7565894bb))
+* update targetsPosition and MoveNode to utilize ZebraID for tracking zebras ([741cf89](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/741cf898eac30f4dccbc8c2e10e18342b9e028ab))
+* update targetsPosition method to return TrackedZebra objects ([598ff23](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/598ff23d9e87b6273a496ab75bfe2d7c08c1b4d8))
+
+### Dependency updates
+
+* **deps:** add kotlin-csv dep ([f9c7e04](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/f9c7e046d035d77ccee434ce13c24092fdf80885))
+
+### Bug Fixes
+
+* add position setting in node concentration for data export ([10260ba](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/10260babc7779e84494c5130099fe6af979a24af))
+* adjust grouping logic for neighbors ([d900e82](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/d900e8295b64f9e1f892c029c83d99e2effa3dfc))
+* **ci:** project name to lower case ([5de60a1](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/5de60a1a7b8f9399655f78da0acadfcd976ac0da))
+* **ci:** remove docker checks ([68a0386](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/68a03861a72945f83a678ced752d433abc15fb6a))
+* **ci:** update CI permissions and adjust asset configuration in release script ([34a5fd1](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/34a5fd134ba0b3bdd17f1b1f1b7b03d4f224a8bf))
+* copy correct python file ([0cb62e9](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/0cb62e993760b4446d88b260da5866b51d680b29))
+* correct estimation aggregation logic in AggregateInformationAgent ([9f723cc](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/9f723cce34c227ce2806153440b797651114d731))
+* do not lose message ([194fd94](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/194fd94a314a33f25d9b2ceda9c1aac69d8c3729))
+* simplify leader determination logic and introduce new election strategy ([fd50f9e](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/fd50f9ed61bda62f304ce961ec38829f178715dd))
+
+### Documentation
+
+* add missing documentation ([df57ec4](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/df57ec439287f513ecccd60627b6e6158c48418d))
+* update README with experiment details and requirements ([34b49c1](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/34b49c186c05b1b00ead69c71258af20cd0b34d2))
+
+### General maintenance
+
+* add todo in readme ([9a9e059](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/9a9e059e2bca1d38323aba76cc845b7b4667bead))
+* better structure for python scripts ([0426752](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/042675216d40c8c858d3310c937cf73859c941f8))
+* change simulation parameters ([3fc41a3](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/3fc41a3b07c3ca264a4db01a55d3b12f699585f9))
+* comment out chart artifact download in CI configuration ([cdd63cc](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/cdd63cc1648abfbb85a5fcdb13fdf515e2e9d2ab))
+* update .gitignore to include /data/ ([5071a52](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/5071a521b512c45306da70ef4de21706ed394f45))
+* update project name ([ec3c4b4](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/ec3c4b475fcd774bff37dd1d25d49b7dd815bddc))
+
+### Style improvements
+
+* adapt to ktlint ([b0dd3e4](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/b0dd3e4451f520f0e00b2d87c44e35a70342a07e))
+* clean up code formatting and add suppress magic numbers ([864d054](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/864d05486a75f1ab539fb18de5cac7be99849a4e))
+* suppress unchecked cast warning in executeBeforeUpdateDistribution method ([4cacadc](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/4cacadc8548aede8a0871d063900224a2b8db199))
+* suppress undocumented public function warnings (even if documentation is there, thanks to detekt) and clean up data class formatting ([01c8f60](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/01c8f60b3c8b75fd37ee603c1160a000b3f550ff))
+
+### Refactoring
+
+* create CSV export functionality and remove redundant code ([79c8a37](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/79c8a379187a38208ffd6cf2eae5d9e319d1d304))
+* enhance data handling and plotting logic for improved robustness and clarity ([abc2efb](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/abc2efb0574c6d2bc80c919f4d04b8b0e078acdb))
+* remove assert non nulls ([b8428c8](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/b8428c891932af5faa1888676cfa2421beec8172))
+* remove old experiments ([2166028](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/21660284b0523712e85791f6914e5bc989423801))
+* remove old simulations ([a0d08ed](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/a0d08ed3490b8568ad50804bb68d3e7d16459c4b))
+* remove unused class ([db2dc6c](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/db2dc6c6b1d0b5de41290148e3ba7fab158d0273))
+* remove unused ExportSensorsDeployment from build configuration ([22aa749](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/22aa7490d3e51030b4c208a23073081aeeb06af6))
+* remove unused files ([08512f6](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/08512f668f0a4a3e794c2e160eb00ed08d2901b6))
+* rename filtering package to models for better organization ([aae1d3c](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/aae1d3c008ec4f527abfe6dc822c5dbbf34a85d9))
+* rename oneFixedSensorOneZebraLB files to fixedSensorsLB ([8a900f3](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/8a900f393c8de2448c18254a9e3160eaacafcd39))
+* rename oneFixedSensorOneZebraNB into movingSensorsNB ([32096f5](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/32096f560cac9030b64e4e2e1461471e713875cf))
+* simplify history update logic and improve readability ([ae3a5f6](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/ae3a5f6d5c4ee23d0c3cafa9d87a187879f6d40f))
+* update imports to use models package for better organization ([d2b3f72](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/d2b3f72f31d6f13a09dcc65a0d847a38d1394757))
+* update sensor configuration and movement parameters for improved simulation accuracy ([c11bcc4](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/c11bcc49952f1634e9139657a0159713ac61eb3e))
+* use device context instead of env and random generator ([8992948](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/8992948d95ce777e3e04be02f39e963d521288d5))
+
 ## [1.6.0](https://github.com/domm99/experiments-ac-based-distributed-particle-filtering/compare/1.5.0...1.6.0) (2025-12-10)
 
 ### Features
