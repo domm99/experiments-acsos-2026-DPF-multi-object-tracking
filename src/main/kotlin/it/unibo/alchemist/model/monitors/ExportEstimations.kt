@@ -1,4 +1,4 @@
-@file:Suppress("TooGenericExceptionCaught")
+@file:Suppress("TooGenericExceptionCaught", "UNCHECKED_CAST")
 
 package it.unibo.alchemist.model.monitors
 
@@ -10,14 +10,6 @@ import it.unibo.alchemist.model.molecules.SimpleMolecule
 import it.unibo.alchemist.model.positions.Euclidean2DPosition
 import it.unibo.collektive.models.ZebraPositionHistory
 import java.io.File
-import java.util.Locale
-
-/**
- * Row model used by CSV exporters in monitors.
- *
- * @property values ordered values written as a single CSV row
- */
-class Line(vararg val values: Any)
 
 /**
  * Checks whether a node contains at least one stored estimation.
@@ -25,6 +17,7 @@ class Line(vararg val values: Any)
  * @param node node that may carry the `Estimations` molecule
  * @return `true` if the node stores a non-empty estimations list
  */
+@Suppress("UNCHECKED_CAST")
 fun <T> hasEstimations(node: Node<T>): Boolean {
     val e = node.getConcentration(SimpleMolecule("Estimations")) as? MutableList<ZebraPositionHistory>
         ?: mutableListOf()
@@ -41,6 +34,7 @@ fun <T> hasEstimations(node: Node<T>): Boolean {
 class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val path: String) :
     OutputMonitor<T, Euclidean2DPosition> {
 
+    @Suppress("UNCHECKED_CAST")
     override fun finished(environment: Environment<T?, Euclidean2DPosition>, time: Time, step: Long) {
         try {
             val outputDir = File(path)
@@ -62,7 +56,7 @@ class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val pat
                         "$path/estimations_zebra${estimation.zebraID}_node-${id}_n-${numberOfNeighbors}_seed-$seed.csv",
                         "estimatedX,estimatedY",
                         "%.4f,%.4f",
-                        estimation.positions.map { Line(it!!.x, it.y) },
+                        estimation.positions.map { Line(it.x, it.y) },
                     )
                 }
             }
@@ -72,25 +66,4 @@ class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val pat
         }
     }
 
-    /**
-     * Exports the given history of points to a CSV file.
-     * @param filename the name of the file to export to
-     * @param history the list of points representing the history of estimations
-     */
-    fun exportToCsv(filename: String, header: String, format: String, history: List<Line>) {
-        File(filename).printWriter().use { out ->
-            // Header
-            out.println(header)
-
-            // Data
-            history.forEach { step ->
-                val line = String.format(
-                    Locale.US,
-                    format,
-                    *step.values,
-                )
-                out.println(line)
-            }
-        }
-    }
 }
