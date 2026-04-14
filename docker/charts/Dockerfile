@@ -2,7 +2,7 @@ FROM python:3.14.0
 RUN mkdir /experiment
 WORKDIR /experiment
 COPY .python-version ./
-COPY process.py ./
+COPY python/plotter/plot_gemini_goes_brrr.py ./
 COPY requirements.txt ./
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
