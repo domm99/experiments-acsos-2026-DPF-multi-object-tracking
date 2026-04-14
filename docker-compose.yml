@@ -15,7 +15,7 @@ services:
     depends_on:
       prepare:
         condition: service_completed_successfully
-    image: angelacortecchia/experiments-acsos-2026-DPF-multi-object-tracking:${VERSION:-latest}
+    image: angelacortecchia/${PROJECT_NAME:-unknown}-fixed-sensor-leader-based:${VERSION:-latest}
     build:
       context: .
       dockerfile: docker/sim/Dockerfile
@@ -29,7 +29,7 @@ services:
     depends_on:
       prepare:
         condition: service_completed_successfully
-    image: angelacortecchia/experiments-acsos-2026-DPF-multi-object-tracking:${VERSION:-latest}
+    image: angelacortecchia/${PROJECT_NAME:-unknown}-fixed-sensor-neighbors-based:${VERSION:-latest}
     build:
       context: .
       dockerfile: docker/sim/Dockerfile
@@ -43,7 +43,7 @@ services:
     depends_on:
       prepare:
         condition: service_completed_successfully
-    image: angelacortecchia/experiments-acsos-2026-DPF-multi-object-tracking:${VERSION:-latest}
+    image: angelacortecchia/${PROJECT_NAME:-unknown}-moving-sensor-neighbors-based:${VERSION:-latest}
     build:
       context: .
       dockerfile: docker/sim/Dockerfile
