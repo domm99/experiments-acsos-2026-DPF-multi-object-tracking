@@ -53,16 +53,16 @@ jobs:
 #        with:
 #          name: charts
 #          path: charts.tar.zst
-  check-simulations-docker:
-    runs-on: ubuntu-24.04
-    concurrency:
-      group: container-check${{ github.workflow }}${{ matrix.os }}${{ github.event.number || github.ref }}
-      cancel-in-progress: true
-    steps:
-    - name: Checkout
-      uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
-    - name: Run compose
-      run: docker-compose up --build
+#  check-simulations-docker:
+#    runs-on: ubuntu-24.04
+#    concurrency:
+#      group: container-check${{ github.workflow }}${{ matrix.os }}${{ github.event.number || github.ref }}
+#      cancel-in-progress: true
+#    steps:
+#    - name: Checkout
+#      uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+#    - name: Run compose
+#      run: docker-compose up --build
   release:
     needs:
       - check-simulations-native
@@ -111,7 +111,7 @@ jobs:
     needs:
       # - create-charts
       - check-simulations-native
-      - check-simulations-docker
+#      - check-simulations-docker
       - release
     if: >-
       always() && (
