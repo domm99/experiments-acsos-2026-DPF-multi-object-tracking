@@ -12,4 +12,4 @@ COPY gradlew* ./
 RUN CI=true ./gradlew runAllGraphic
 RUN rm -rf data
 RUN ./gradlew --stop
-CMD ./gradlew runAllBatch
+CMD MAX_SEED=$MAX_SEED ./gradlew $GRADLE_TASK

@@ -6,4 +6,4 @@ COPY process.py ./
 COPY requirements.txt ./
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
-CMD python process.py
+CMD python python/plotter/plot_gemini_goes_brrr.py
