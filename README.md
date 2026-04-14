@@ -137,13 +137,12 @@ At the moment, effect files are available for:
 # Fixed Sensors Leader Based experiment with default parameters and graphical interface
 curl https://raw.githubusercontent.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/refs/heads/master/fixed-sensors-leader-based.sh | bash 
 ```
-- the repository is in your `Downloads` folder for further inspection.
-
 or
 ```bash
 # Moving Sensors Neighbors Based experiment with default parameters and graphical interface
 curl https://raw.githubusercontent.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/refs/heads/master/moving-sensors-neighbors-based.sh | bash 
 ```
+- the repository is in your `Downloads` folder for further inspection.
 
 #### Reproduce the experiments through Gradle
 
@@ -290,7 +289,7 @@ For the current project status, result reproduction means:
     ```
 4. Run the script to process the data and generate the charts (this process may take some time):
     ```bash
-    python plot.py
+    python plot.py TODO FIX THIS
     ```
 5. The charts will be generated in the `charts` folder.
 6. If you want to regenerate the charts, you can run the script again.
