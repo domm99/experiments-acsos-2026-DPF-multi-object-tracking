@@ -76,6 +76,7 @@ class KillLeader<T, P : Position<P>>(val environment: Environment<T, P>, val dis
         if (!executed) {
             executed = true
             val leader = nodes
+                .filter { it.contains(SimpleMolecule("Filter")) }
                 .first { it.getConcentration(SimpleMolecule("isLeader")) as Boolean }
             leader.setConcentration(SimpleMolecule("isDown"), true as T)
             leader.setConcentration(SimpleMolecule("isLeader"), false as T)
