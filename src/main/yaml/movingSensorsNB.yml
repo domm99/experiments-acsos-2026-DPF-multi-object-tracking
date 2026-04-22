@@ -59,7 +59,7 @@ _pool: &program
     type: Event
     actions:
       - type: RunCollektiveProgram
-        parameters: [ it.unibo.collektive.AggregateInformationAgentKt.informationFilterEntrypoint ]
+        parameters: [ it.unibo.collektive.AggregateInformationAgentKt.informationFilterAndDistributedMovementEntrypoint ]
 
 deployments:
   - type: Point
@@ -100,6 +100,14 @@ deployments:
         concentration: *numberOfNeighbors
       - molecule: isDown
         concentration: false
+      - molecule: FormationRows
+        concentration: 4
+      - molecule: FormationColumns
+        concentration: 6
+      - molecule: FormationSpacing
+        concentration: *stepLength
+      - molecule: SwarmStepSize
+        concentration: 2.0
     programs: [*program, *sensorMovement]
     properties:
       - type: it.unibo.collektive.alchemist.device.sensors.impl.LocationSensorProperty
