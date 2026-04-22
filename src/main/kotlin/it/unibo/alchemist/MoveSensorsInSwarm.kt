@@ -7,6 +7,7 @@ import it.unibo.alchemist.model.Reaction
 import it.unibo.alchemist.model.actions.AbstractMoveNode
 import it.unibo.alchemist.model.molecules.SimpleMolecule
 import it.unibo.alchemist.model.positions.Euclidean2DPosition
+import it.unibo.collektive.models.Point
 import kotlin.math.sqrt
 
 /**
@@ -24,6 +25,17 @@ class MoveSensorsInSwarm<T>(
     val spacing: Double,
 ) : AbstractMoveNode<T, Euclidean2DPosition>(environment, node, true) {
 
+    private fun nextPositionFromMolecule(): Euclidean2DPosition? =
+        when {
+            node.contains(SimpleMolecule("NextPosition")) -> {
+                @Suppress("UNCHECKED_CAST")
+                val next = node.getConcentration(SimpleMolecule("NextPosition")) as? Point
+                next?.let { Euclidean2DPosition(it.x, it.y) }
+            }
+
+            else -> null
+        }
+
     private fun getCentroid(positions: List<Euclidean2DPosition>): Euclidean2DPosition {
         if (positions.isEmpty()) return Euclidean2DPosition(0.0, 0.0)
 
@@ -35,12 +47,26 @@ class MoveSensorsInSwarm<T>(
     }
 
     override fun getNextPosition(): Euclidean2DPosition {
+        nextPositionFromMolecule()?.let { return it }
+
         val zebras = environment.nodes.filter { it.contains(SimpleMolecule("Zebra")) }
         val currentPos = environment.getPosition(node)
         val targetPos = getCentroid(zebras.map { environment.getPosition(it) })
-        val numberOfZebras = zebras.size
-        val midInGrid = node.id - numberOfZebras
-        val stepSize = 2.0
+        val midInGrid = environment.nodes
+            .filter { it.contains(SimpleMolecule("Filter")) }
+            .map { it.id }
+            .sorted()
+            .indexOf(node.id)
+            .takeIf { it >= 0 }
+            ?: 0
+        val stepSize = when {
+            node.contains(SimpleMolecule("SwarmStepSize")) -> {
+                @Suppress("UNCHECKED_CAST")
+                node.getConcentration(SimpleMolecule("SwarmStepSize")) as? Double ?: 2.0
+            }
+
+            else -> 2.0
+        }
 
         val c = midInGrid % gridColumns
         val r = midInGrid / gridColumns
