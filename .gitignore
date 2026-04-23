@@ -10,3 +10,4 @@ timeprocessed
 .kotlin
 .DS_Store
 /data/
+/node_modules/
