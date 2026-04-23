@@ -13,10 +13,10 @@ import it.unibo.collektive.models.DistanceFromPosition
 import it.unibo.collektive.models.Point
 import it.unibo.collektive.models.ZebraPositionHistory
 import it.unibo.collektive.models.distanceTo
-import it.unibo.filtering.ParticleFilter
 import it.unibo.collektive.stdlib.accumulation.convergeSum
 import it.unibo.collektive.stdlib.consensus.globalElection
 import it.unibo.collektive.stdlib.spreading.hopGradientCast
+import it.unibo.filtering.ParticleFilter
 
 private const val DEFAULT_SWARM_STEP_SIZE = 2.0
 
@@ -126,9 +126,7 @@ fun List<ZebraPositionHistory>.updateHistory(
 }
 
 context(device: CollektiveDevice<*>, position: LocationSensor)
-private fun Aggregate<Int>.computeDistributedSwarmMovement(
-    estimationsHistory: List<ZebraPositionHistory>,
-): Point {
+private fun Aggregate<Int>.computeDistributedSwarmMovement(estimationsHistory: List<ZebraPositionHistory>): Point {
     val currentPosition = position.selfPosition()
     val rows = device.getOrDefault("FormationRows", 0)
     val columns = device.getOrDefault("FormationColumns", 0)
@@ -170,7 +168,8 @@ private fun Aggregate<Int>.computeDistributedSwarmMovement(
 
 private data class EstimationContribution(val sumX: Double, val sumY: Double, val count: Int)
 
-private data class SwarmCoordinatorPriority(val centrality: Double, val nodeId: Int) : Comparable<SwarmCoordinatorPriority> {
+private data class SwarmCoordinatorPriority(val centrality: Double, val nodeId: Int) :
+    Comparable<SwarmCoordinatorPriority> {
     override fun compareTo(other: SwarmCoordinatorPriority): Int =
         compareBy<SwarmCoordinatorPriority>({ it.centrality }, { it.nodeId }).compare(this, other)
 }
@@ -205,22 +204,11 @@ private fun CollektiveDevice<*>.currentFiltersCentroid(): Point {
     return Point(sumX / filters.size, sumY / filters.size)
 }
 
-private fun CollektiveDevice<*>.filterIndexOf(nodeId: Int): Int =
-    environment.nodes
-        .filter { it.contains(SimpleMolecule("Filter")) }
-        .map { it.id }
-        .sorted()
-        .indexOf(nodeId)
-        .takeIf { it >= 0 }
-        ?: 0
+private fun CollektiveDevice<*>.filterIndexOf(nodeId: Int): Int = environment.nodes
+    .filter { it.contains(SimpleMolecule("Filter")) }
+    .map { it.id }.sorted().indexOf(nodeId).takeIf { it >= 0 } ?: 0
 
-private fun gridDestination(
-    target: Point,
-    gridIndex: Int,
-    rows: Int,
-    columns: Int,
-    spacing: Double,
-): Point {
+private fun gridDestination(target: Point, gridIndex: Int, rows: Int, columns: Int, spacing: Double): Point {
     val column = gridIndex % columns
     val row = gridIndex / columns
     val offsetX = (column - (columns - 1) / 2.0) * spacing
