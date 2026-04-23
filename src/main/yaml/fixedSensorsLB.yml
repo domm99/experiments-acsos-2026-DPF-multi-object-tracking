@@ -42,6 +42,15 @@ _movementZebra38: &movementZebra38
         parameters:
           - "zebras-trajectories/flights/flight_1_zebras/zebra_038.csv"
 
+environment:
+  type: Continuous2DEnvironment
+  parameters: [ ]
+  global-programs:
+    - time-distribution:
+        type: Trigger
+        parameters: [ 700 ]
+      type: KillLeader
+
 _pool: &program
   - time-distribution: 1
     type: Event
@@ -62,8 +71,6 @@ deployments:
     parameters: [ 0, 0 ]
     programs:
       - *movementZebra38
-#  - type: Point
-#    parameters: [15, 15]
   - type: Grid
     parameters: [ -70, -10, 100, 100, *stepLength, *stepLength, 1, 1 ]
     contents:
@@ -82,7 +89,6 @@ deployments:
     programs: *program
     properties:
       - type: it.unibo.collektive.alchemist.device.sensors.impl.LocationSensorProperty
-#        parameters: [ *measurementStdDev ]
 
 launcher:
   parameters:
@@ -93,8 +99,6 @@ launcher:
 monitors:
   - type: it.unibo.alchemist.model.monitors.ExportEstimations
     parameters: [*seed, *numberOfNeighbors, *dataPath]
-#  - type: it.unibo.alchemist.model.monitors.ExportSensorsDeployment
-#    parameters: [*seed, *numberOfNeighbors, *dataPath]
 
 terminate:
   type: AfterTime
