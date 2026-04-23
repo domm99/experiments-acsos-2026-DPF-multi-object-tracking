@@ -29,67 +29,58 @@ class MoveSensorsInSwarm<T>(
         when {
             node.contains(SimpleMolecule("NextPosition")) -> {
                 @Suppress("UNCHECKED_CAST")
-                val next = node.getConcentration(SimpleMolecule("NextPosition")) as? Point
-                next?.let { Euclidean2DPosition(it.x, it.y) }
+                val nextPoint = node.getConcentration(SimpleMolecule("NextPosition")) as? Point
+                nextPoint?.let { Euclidean2DPosition(it.x, it.y) }
             }
-
             else -> null
         }
 
     private fun getCentroid(positions: List<Euclidean2DPosition>): Euclidean2DPosition {
         if (positions.isEmpty()) return Euclidean2DPosition(0.0, 0.0)
-
-        val sumX = positions.sumOf { it.x }
-        val sumY = positions.sumOf { it.y }
-        val n = positions.size
-
-        return Euclidean2DPosition(sumX / n, sumY / n)
+        val totalX = positions.sumOf { it.x }
+        val totalY = positions.sumOf { it.y }
+        val positionsCount = positions.size
+        return Euclidean2DPosition(totalX / positionsCount, totalY / positionsCount)
     }
 
-    override fun getNextPosition(): Euclidean2DPosition {
-        nextPositionFromMolecule()?.let { return it }
-
-        val zebras = environment.nodes.filter { it.contains(SimpleMolecule("Zebra")) }
-        val currentPos = environment.getPosition(node)
-        val targetPos = getCentroid(zebras.map { environment.getPosition(it) })
-        val midInGrid = environment.nodes
-            .filter { it.contains(SimpleMolecule("Filter")) }
-            .map { it.id }
-            .sorted()
-            .indexOf(node.id)
-            .takeIf { it >= 0 }
-            ?: 0
-        val stepSize = when {
-            node.contains(SimpleMolecule("SwarmStepSize")) -> {
-                @Suppress("UNCHECKED_CAST")
-                node.getConcentration(SimpleMolecule("SwarmStepSize")) as? Double ?: 2.0
+    override fun getNextPosition(): Euclidean2DPosition =
+        nextPositionFromMolecule() ?: run {
+            val zebraNodes = environment.nodes.filter { it.contains(SimpleMolecule("Zebra")) }
+            val currentPosition = environment.getPosition(node)
+            val swarmCentroid = getCentroid(zebraNodes.map { environment.getPosition(it) })
+            val sensorIndexInGrid = environment.nodes
+                .filter { it.contains(SimpleMolecule("Filter")) }
+                .map { it.id }
+                .sorted()
+                .indexOf(node.id)
+                .takeIf { it >= 0 }
+                ?: 0
+            val movementStepSize = when {
+                node.contains(SimpleMolecule("SwarmStepSize")) -> {
+                    @Suppress("UNCHECKED_CAST")
+                    node.getConcentration(SimpleMolecule("SwarmStepSize")) as? Double ?: 2.0
+                }
+                else -> 2.0
             }
 
-            else -> 2.0
+            val gridColumnIndex = sensorIndexInGrid % gridColumns
+            val gridRowIndex = sensorIndexInGrid / gridColumns
+            val horizontalOffset = (gridColumnIndex - (gridColumns - 1) / 2.0) * spacing
+            val verticalOffset = (gridRowIndex - (gridRows - 1) / 2.0) * spacing
+            val destinationX = swarmCentroid.x + horizontalOffset
+            val destinationY = swarmCentroid.y + verticalOffset
+            val deltaX = destinationX - currentPosition.x
+            val deltaY = destinationY - currentPosition.y
+            val distanceToDestination = sqrt(deltaX * deltaX + deltaY * deltaY)
+            if (distanceToDestination < movementStepSize) {
+                Euclidean2DPosition(destinationX, destinationY)
+            } else {
+                Euclidean2DPosition(
+                    currentPosition.x + (deltaX / distanceToDestination) * movementStepSize,
+                    currentPosition.y + (deltaY / distanceToDestination) * movementStepSize,
+                )
+            }
         }
-
-        val c = midInGrid % gridColumns
-        val r = midInGrid / gridColumns
-
-        val offsetX = (c - (gridColumns - 1) / 2.0) * spacing
-        val offsetY = (r - (gridRows - 1) / 2.0) * spacing
-
-        val finalDestX = targetPos.x + offsetX
-        val finalDestY = targetPos.y + offsetY
-
-        val dx = finalDestX - currentPos.x
-        val dy = finalDestY - currentPos.y
-        val distance = sqrt(dx * dx + dy * dy)
-
-        if (distance < stepSize) {
-            return Euclidean2DPosition(finalDestX, finalDestY)
-        }
-
-        return Euclidean2DPosition(
-            currentPos.x + (dx / distance) * stepSize,
-            currentPos.y + (dy / distance) * stepSize,
-        )
-    }
 
     override fun cloneAction(p0: Node<T?>?, p1: Reaction<T?>?): Action<T?> =
         MoveSensorsInSwarm(environment, node, gridRows, gridColumns, spacing)
