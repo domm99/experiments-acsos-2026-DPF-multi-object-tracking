@@ -33,7 +33,7 @@ fun Aggregate<Int>.computeDistributedSwarmMovement(
     gridFormationValues: GridFormationValues,
     bound: Double,
     estimationsHistory: List<ZebraPositionHistory>,
-): Point = evolving(device.currentFiltersCentroid()) { fallbackTarget ->
+): Point = evolving(device.environment.currentFiltersCentroid()) { fallbackTarget ->
     val currentPosition = position.selfPosition()
     var sharedTarget: Point = fallbackTarget
     val nextPosition: Point = when {
@@ -54,7 +54,7 @@ fun Aggregate<Int>.computeDistributedSwarmMovement(
                 else -> fallbackTarget
             }
             sharedTarget = hopGradientCast(isCoordinator, if (isCoordinator) coordinatorTarget else fallbackTarget)
-            val gridIndex = device.filterIndexOf(localId)
+            val gridIndex = device.environment.filterIndexOf(localId)
             val desiredPosition = gridDestination(sharedTarget, gridIndex, gridFormationValues)
             moveTowards(currentPosition, desiredPosition, gridFormationValues.stepSize)
         }
