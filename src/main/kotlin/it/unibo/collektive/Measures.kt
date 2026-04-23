@@ -1,10 +1,12 @@
 package it.unibo.collektive
 
+import it.unibo.alchemist.collektive.device.CollektiveDevice
 import it.unibo.alchemist.model.Environment
 import it.unibo.alchemist.model.Position
 import it.unibo.alchemist.model.molecules.SimpleMolecule
 import it.unibo.collektive.models.Point
 import it.unibo.collektive.models.distanceTo
+import it.unibo.collektive.stdlib.swarm.GridFormationValues
 import kotlin.math.exp
 import kotlin.math.hypot
 import kotlin.math.log10
@@ -53,7 +55,7 @@ fun fromPositionToMeasure(selfPosition: Point, sensedPosition: Point, random: Ra
 fun <T, P : Position<P>> Environment<T, P>.distanceFromNetworkCentroid(position: Point): Double {
     val filtersNode = this.nodes.filter { it.contains(SimpleMolecule("Filter")) }
     val sum = filtersNode.fold(0.0 to 0.0) { acc, next ->
-        val nextNodePos = this.getPosition(next).coordinates // Add 10 to avoid negative positions .map { it + 10 }
+        val nextNodePos = this.getPosition(next).coordinates
         acc.first + nextNodePos[0] to acc.second + nextNodePos[1]
     }
     val filtersCount = filtersNode.size
@@ -73,3 +75,39 @@ fun <T, P : Position<P>> Environment<T, P>.distanceFromNetworkCentroid(position:
  */
 fun centralityWeight(distanceFromCentroid: Double, sigma: Double): Double =
     exp(-(distanceFromCentroid * distanceFromCentroid) / (2 * sigma * sigma))
+
+/**
+ * Computes the grid slot assigned to a sensor around a target point.
+ *
+ * @param target Center point of the grid formation.
+ * @param gridIndex Zero-based index of the sensor in the grid ordering.
+ * @param gridFormationValues Grid dimensions and spacing used to place the sensor.
+ * @return The destination point corresponding to the sensor grid slot.
+ */
+fun gridDestination(target: Point, gridIndex: Int, gridFormationValues: GridFormationValues): Point {
+    val column = gridIndex % gridFormationValues.cols
+    val row = gridIndex / gridFormationValues.cols
+    val offsetX = (column - (gridFormationValues.cols - 1) / 2.0) * gridFormationValues.spacing
+    val offsetY = (row - (gridFormationValues.rows - 1) / 2.0) * gridFormationValues.spacing
+    return Point(target.x + offsetX, target.y + offsetY)
+}
+
+/**
+ * Advances a point toward a destination by at most a fixed step size.
+ *
+ * @param current Starting point.
+ * @param destination Target point to approach.
+ * @param stepSize Maximum movement length for this step.
+ * @return The destination if it is within range, otherwise the intermediate point on the path.
+ */
+fun moveTowards(current: Point, destination: Point, stepSize: Double): Point {
+    val distance = current.distanceTo(destination)
+    if (distance <= stepSize) {
+        return destination
+    }
+    val ratio = stepSize / distance
+    return Point(
+        x = current.x + (destination.x - current.x) * ratio,
+        y = current.y + (destination.y - current.y) * ratio,
+    )
+}
