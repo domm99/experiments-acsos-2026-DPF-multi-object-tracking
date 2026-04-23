@@ -2,6 +2,9 @@ incarnation: collektive
 
 variables:
   numberOfParticles: &numberOfParticles 250
+  formationRows: &formationRows 4
+  formationCols: &formationColumns 6
+  swarmStepSize: &swarmStepSize 100.0
   maxInitialSpeed: &maxInitialSpeed 2.0
   neighboringDistance: &neighboringDistance 250.0
   numberOfNeighbors: &numberOfNeighbors
@@ -83,8 +86,6 @@ deployments:
         concentration: true
     programs:
       - *movementZebra38
-#  - type: Point
-#    parameters: [15, 15]
   - type: Grid
     parameters: [ -70, -10, 100, 100, *stepLength, *stepLength, 1, 1 ]
     contents:
@@ -101,13 +102,13 @@ deployments:
       - molecule: isDown
         concentration: false
       - molecule: FormationRows
-        concentration: 4
+        concentration: *formationRows
       - molecule: FormationColumns
-        concentration: 6
+        concentration: *formationColumns
       - molecule: FormationSpacing
         concentration: *stepLength
       - molecule: SwarmStepSize
-        concentration: 2.0
+        concentration: *swarmStepSize
     programs: [*program, *sensorMovement]
     properties:
       - type: it.unibo.collektive.alchemist.device.sensors.impl.LocationSensorProperty
