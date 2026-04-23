@@ -26,3 +26,26 @@ data class DistanceFromPosition(val currentPosition: Point, val distance: Double
  * @property positions Recorded trajectory points, in chronological order.
  */
 data class ZebraPositionHistory(val zebraID: Int, val positions: List<Point>)
+
+/**
+ * Aggregates the latest position contribution available from each zebra history.
+ *
+ * @return The summed coordinates and contribution count derived from the latest known positions.
+ */
+fun List<ZebraPositionHistory>.latestContribution(): EstimationContribution {
+    val latestPositions = mapNotNull { it.positions.lastOrNull() }
+    return EstimationContribution(
+        sumX = latestPositions.sumOf { it.x },
+        sumY = latestPositions.sumOf { it.y },
+        count = latestPositions.size,
+    )
+}
+
+/**
+ * Partial aggregate used to compute a centroid from distributed zebra estimates.
+ *
+ * @property sumX Sum of the x coordinates contributed by the latest estimates.
+ * @property sumY Sum of the y coordinates contributed by the latest estimates.
+ * @property count Number of estimates included in the sums.
+ */
+data class EstimationContribution(val sumX: Double, val sumY: Double, val count: Int)
