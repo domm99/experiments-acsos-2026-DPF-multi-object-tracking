@@ -28,6 +28,14 @@ data class DistanceFromPosition(val currentPosition: Point, val distance: Double
 data class ZebraPositionHistory(val zebraID: Int, val positions: List<Point>)
 
 /**
+ * Checks whether all tracked zebras have accumulated at least [minimumHistoryLength] estimations.
+ *
+ * @return `true` only when every zebra history is long enough.
+ */
+fun List<ZebraPositionHistory>.hasEnoughHistory(minimumHistoryLength: Int): Boolean =
+    isNotEmpty() && all { it.positions.size >= minimumHistoryLength }
+
+/**
  * Aggregates the latest position contribution available from each zebra history.
  *
  * @return The summed coordinates and contribution count derived from the latest known positions.
