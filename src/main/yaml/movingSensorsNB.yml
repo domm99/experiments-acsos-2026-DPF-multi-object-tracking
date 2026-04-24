@@ -2,17 +2,68 @@ incarnation: collektive
 
 variables:
   numberOfParticles: &numberOfParticles 250
-  formationRows: &formationRows 4
-  formationCols: &formationColumns 6
-  swarmStepSize: &swarmStepSize 100.0
+  formationRows: &formationRows
+    type: ArbitraryVariable
+    parameters: [4 , [4] ]
+  formationCols: &formationColumns
+    type: ArbitraryVariable
+    parameters: [6 , [6] ]
+  formationSpacing: &formationSpacing
+    type: ArbitraryVariable
+    parameters: [30 , [30] ]
+  swarmStepSize: &swarmStepSize
+    type: ArbitraryVariable
+    parameters: [10 , [10] ]
+  swarmWarmupRounds: &swarmWarmupRounds 5
   maxInitialSpeed: &maxInitialSpeed 2.0
   neighboringDistance: &neighboringDistance 250.0
   numberOfNeighbors: &numberOfNeighbors
     type: ArbitraryVariable
     parameters: [ 5, [0, 1, 2, 4, 7] ]
-  stepLength: &stepLength 30
+  gridCenterX: &gridCenterX
+    type: ArbitraryVariable
+    parameters: [0.0 , [0.0] ]
+  gridCenterY: &gridCenterY
+    type: ArbitraryVariable
+    parameters: [0.0 , [0.0] ]
+  gridStartX: &gridStartX
+    language: kotlin
+    formula: |
+      gridCenterX as Double - (formationCols as Int - 1) * (formationSpacing as Int) / 2.0
+  gridStartY: &gridStartY
+    language: kotlin
+    formula: |
+      gridCenterY as Double - (formationRows as Int - 1) * (formationSpacing as Int) / 2.0
+  gridEndX: &gridEndX
+    language: kotlin
+    formula: |
+      (gridStartX as Double) + (formationCols as Int) * (formationSpacing as Int)
+  gridEndY: &gridEndY
+    language: kotlin
+    formula: |
+      (gridStartY as Double) + (formationRows as Int) * (formationSpacing as Int)
+  particleInitMinX: &particleInitMinX
+    language: kotlin
+    formula: |
+      gridCenterX as Double - (size as Int) / 2.0
+  particleInitMaxX: &particleInitMaxX
+    language: kotlin
+    formula: |
+      gridCenterX as Double + (size as Int) / 2.0
+  particleInitMinY: &particleInitMinY
+    language: kotlin
+    formula: |
+      gridCenterY as Double - (size as Int) / 2.0
+  particleInitMaxY: &particleInitMaxY
+    language: kotlin
+    formula: |
+      gridCenterY as Double + (size as Int) / 2.0
+  gridJitterX: &gridJitterX 0
+  gridJitterY: &gridJitterY 0
   dataPath: &dataPath "data/movingSensorsNB/"
-  size: &size 150
+  size: &size
+    type: ArbitraryVariable
+    parameters: [ 150, [150] ]
   seed: &seed
     min: 0
     max: 5
@@ -53,9 +104,9 @@ _sensorMovement: &sensorMovement
     actions:
       - type: MoveSensorsInSwarm
         parameters:
-          - 4 # number of rows in the grid of sensors
-          - 6 # number of columns in the grid of sensors
-          - *stepLength # spacing
+          - *formationRows # number of rows in the grid of sensors
+          - *formationColumns # number of columns in the grid of sensors
+          - *formationSpacing # spacing
 
 _pool: &program
   - time-distribution: 1
@@ -66,28 +117,36 @@ _pool: &program
 
 deployments:
   - type: Point
-    parameters: [ 0, 0 ]
+    parameters: [ *gridCenterX, *gridCenterY ]
     contents:
       - molecule: Zebra
         concentration: true
     programs:
       - *movementZebra35
   - type: Point
-    parameters: [ 0, 0 ]
+    parameters: [ *gridCenterX, *gridCenterY ]
     contents:
       - molecule: Zebra
         concentration: true
     programs:
       - *movementZebra37
   - type: Point
-    parameters: [ 0, 0 ]
+    parameters: [ *gridCenterX, *gridCenterY ]
     contents:
       - molecule: Zebra
         concentration: true
     programs:
       - *movementZebra38
   - type: Grid
-    parameters: [ -70, -10, 100, 100, *stepLength, *stepLength, 1, 1 ]
+    parameters:
+      - *gridStartX
+      - *gridStartY
+      - *gridEndX
+      - *gridEndY
+      - *formationSpacing
+      - *formationSpacing
+      - *gridJitterX
+      - *gridJitterY
     contents:
       - molecule: Filter
         concentration: true
@@ -97,6 +156,14 @@ deployments:
         concentration: *maxInitialSpeed
       - molecule: SideLength
         concentration: *size
+      - molecule: InitialParticlesMinX
+        concentration: *particleInitMinX
+      - molecule: InitialParticlesMaxX
+        concentration: *particleInitMaxX
+      - molecule: InitialParticlesMinY
+        concentration: *particleInitMinY
+      - molecule: InitialParticlesMaxY
+        concentration: *particleInitMaxY
       - molecule: NumberOfNeighbors
         concentration: *numberOfNeighbors
       - molecule: isDown
@@ -106,9 +173,11 @@ deployments:
       - molecule: FormationColumns
         concentration: *formationColumns
       - molecule: FormationSpacing
-        concentration: *stepLength
+        concentration: *formationSpacing
       - molecule: SwarmStepSize
         concentration: *swarmStepSize
+      - molecule: SwarmWarmupRounds
+        concentration: *swarmWarmupRounds
     programs: [*program, *sensorMovement]
     properties:
       - type: it.unibo.collektive.alchemist.device.sensors.impl.LocationSensorProperty
