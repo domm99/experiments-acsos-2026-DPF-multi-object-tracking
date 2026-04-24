@@ -11,6 +11,7 @@ import it.unibo.collektive.alchemist.device.sensors.LocationSensor
 import it.unibo.collektive.models.DistanceFromPosition
 import it.unibo.collektive.models.ZebraPositionHistory
 import it.unibo.collektive.stdlib.swarm.DEFAULT_SWARM_STEP_SIZE
+import it.unibo.collektive.stdlib.swarm.DEFAULT_SWARM_WARMUP_ROUNDS
 import it.unibo.collektive.stdlib.swarm.GridFormationValues
 import it.unibo.collektive.stdlib.swarm.computeDistributedSwarmMovement
 import it.unibo.filtering.ParticleFilter
@@ -56,8 +57,10 @@ fun Aggregate<Int>.informationFilterAndDistributedMovementEntrypoint(
         device.getOrDefault("FormationColumns", 0),
         device.getOrDefault("FormationSpacing", 0.0),
         device.getOrDefault("SwarmStepSize", DEFAULT_SWARM_STEP_SIZE),
+        device.getOrDefault("SwarmWarmupRounds", DEFAULT_SWARM_WARMUP_ROUNDS),
     )
-    computeDistributedSwarmMovement(gridValues, sideLength.toDouble(), history).also {
+    val electionBound = (gridValues.rows * gridValues.cols).takeIf { it > 0 } ?: sideLength
+    computeDistributedSwarmMovement(gridValues, electionBound, history).also {
         device["NextPosition"] = it
     }
     history
@@ -78,12 +81,18 @@ fun Aggregate<*>.localFiltering(
     sideLength: Double,
 ): List<ZebraPositionHistory> {
     val targets = position.targetsPosition()
+    val initializationArea = device.particleInitializationArea(sideLength)
     return evolving(
         ParticleFilter(
-            numberOfParticles,
-            maxInitialSpeed,
-            sideLength,
-            targets.map { it.zebraID }.toSet(),
+            numberOfParticles = numberOfParticles,
+            maxInitialSpeed = maxInitialSpeed,
+            sideLength = sideLength,
+            initialMinX = initializationArea.minX,
+            initialMaxX = initializationArea.maxX,
+            initialMinY = initializationArea.minY,
+            initialMaxY = initializationArea.maxY,
+            clampParticlesToInitializationArea = initializationArea.clampParticles,
+            targetsIDs = targets.map { it.zebraID }.toSet(),
             random = device.randomGenerator,
         ),
     ) { filter ->
