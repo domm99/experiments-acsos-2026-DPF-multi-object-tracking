@@ -1,5 +1,6 @@
 package it.unibo.collektive.stdlib.swarm
 
+import it.unibo.alchemist.collektive.device.CollektiveDevice
 import it.unibo.collektive.aggregate.FieldEntry
 import it.unibo.collektive.aggregate.api.Aggregate
 import it.unibo.collektive.aggregate.api.sharing
@@ -10,23 +11,36 @@ import it.unibo.collektive.stdlib.consensus.boundedElection
 import it.unibo.collektive.stdlib.spreading.hopGradientCast
 import kotlin.math.roundToInt
 
-context(position: LocationSensor)
-inline fun <reified ID : Comparable<ID>>Aggregate<ID>.networkCentroid(bound: Int): Point {
+@PublishedApi
+internal data class CentroidAccumulator(val sumX: Double, val sumY: Double, val count: Int) {
+    operator fun plus(other: CentroidAccumulator): CentroidAccumulator =
+        CentroidAccumulator(sumX + other.sumX, sumY + other.sumY, count + other.count)
+
+    fun centroidOr(default: Point): Point = when (count) {
+        0 -> default
+        else -> Point(sumX / count, sumY / count)
+    }
+}
+
+context(position: LocationSensor, device: CollektiveDevice<*>)
+inline fun <reified ID : Comparable<ID>> Aggregate<ID>.networkCentroid(bound: Int): Point {
+    val currentPosition = position.selfPosition()
     val isInformationLeader = boundedElection(bound = bound, strength = localId) == localId
-    val centroid = sensorEntries(isInformationLeader)
-        .map { it.value }
-        .centroidOr(position.selfPosition())
-    return hopGradientCast(isInformationLeader, centroid)
+    val shared = convergeCast(
+        CentroidAccumulator(currentPosition.x, currentPosition.y, 1),
+        isInformationLeader,
+    ) { acc, next -> acc + next }.also { device["Shared"] = it }
+    val centroid = shared.centroidOr(currentPosition)
+    return hopGradientCast(isInformationLeader, centroid).also { device["Centroid"] = it }
 }
 
 context(position: LocationSensor)
 inline fun <reified ID : Comparable<ID>> Aggregate<ID>.sensorEntries(
     isInformationLeader: Boolean,
-): List<FieldEntry<ID, Point>> =
-    convergeCast(
-        local = listOf(FieldEntry(localId, position.selfPosition())),
-        sink = isInformationLeader,
-    ) { acc, next -> acc + next }
+): List<FieldEntry<ID, Point>> = convergeCast(
+    local = listOf(FieldEntry(localId, position.selfPosition())),
+    sink = isInformationLeader,
+) { acc, next -> acc + next }
 
 context(position: LocationSensor)
 inline fun <reified ID : Comparable<ID>> Aggregate<ID>.networkGridIndex(
@@ -35,7 +49,7 @@ inline fun <reified ID : Comparable<ID>> Aggregate<ID>.networkGridIndex(
 ): Int {
     val isInformationLeader = boundedElection(bound = bound, strength = localId) == localId
     val sensedSensors = sensorEntries(isInformationLeader)
-    return sharing(emptyList<ID>()) { previousOrdering ->
+    return sharing(emptyList()) { previousOrdering ->
         val localStoredOrdering = previousOrdering.local.value
         val leaderOrdering = when {
             isInformationLeader -> {
