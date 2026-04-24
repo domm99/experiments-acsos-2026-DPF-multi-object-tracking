@@ -64,8 +64,11 @@ variables:
   gridJitterY: &gridJitterY 1
   dataPath: &dataPath "data/fixedSensorsNB/"
   size: &size
-    type: ArbitraryVariable
-    parameters: [ 150, [150] ]
+    language: kotlin
+    formula: |
+      val width = kotlin.math.abs((gridEndX as Double) - (gridStartX as Double))
+      val height = kotlin.math.abs((gridEndY as Double) - (gridStartY as Double))
+      (if (width >= height) width else height).toInt()
   seed: &seed
     min: 0
     max: 5

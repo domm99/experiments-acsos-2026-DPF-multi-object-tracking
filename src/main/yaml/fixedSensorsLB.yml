@@ -1,6 +1,7 @@
 incarnation: collektive
 
 variables:
+  dataPath: &dataPath "data/fixedSensorsLB/"
   numberOfParticles: &numberOfParticles 250
   formationRows: &formationRows
     type: ArbitraryVariable
@@ -14,8 +15,6 @@ variables:
   maxInitialSpeed: &maxInitialSpeed 2.0
   neighboringDistance: &neighboringDistance 40.0
   numberOfNeighbors: &numberOfNeighbors 0
-  # For fixed sensors we keep the grid horizontally centered and anchor the
-  # lower long side close to the movables' starting axis.
   gridCenterX: &gridCenterX
     type: ArbitraryVariable
     parameters: [ 0.0, [0.0] ]
@@ -58,12 +57,12 @@ variables:
     language: kotlin
     formula: |
       (gridStartY as Double) + (formationRows as Int - 1) * (formationSpacing as Int) + (particleInitExtraTopY as Double)
-  gridJitterX: &gridJitterX 1
-  gridJitterY: &gridJitterY 1
-  dataPath: &dataPath "data/fixedSensorsLB/"
   size: &size
-    type: ArbitraryVariable
-    parameters: [ 150, [150] ]
+    language: kotlin
+    formula: |
+      val width = kotlin.math.abs((gridEndX as Double) - (gridStartX as Double))
+      val height = kotlin.math.abs((gridEndY as Double) - (gridStartY as Double))
+      maxOf(width, height).toInt()
   seed: &seed
     min: 0
     max: 5
@@ -116,15 +115,15 @@ _pool: &program
 
 deployments:
   - type: Point
-    parameters: [ 0, 0 ]
+    parameters: [ *gridCenterX, 0 ]
     programs:
       - *movementZebra35
   - type: Point
-    parameters: [ 0, 0 ]
+    parameters: [ *gridCenterX, 0 ]
     programs:
       - *movementZebra37
   - type: Point
-    parameters: [ 0, 0 ]
+    parameters: [ *gridCenterX, 0 ]
     programs:
       - *movementZebra38
   - type: Grid
@@ -135,8 +134,8 @@ deployments:
       - *gridEndY
       - *formationSpacing
       - *formationSpacing
-      - *gridJitterX
-      - *gridJitterY
+      - 1
+      - 1
     contents:
       - molecule: Filter
         concentration: true
@@ -146,6 +145,10 @@ deployments:
         concentration: *maxInitialSpeed
       - molecule: SideLength
         concentration: *size
+      - molecule: FormationRows
+        concentration: *formationRows
+      - molecule: FormationColumns
+        concentration: *formationColumns
       - molecule: InitialParticlesMinX
         concentration: *particleInitMinX
       - molecule: InitialParticlesMaxX
