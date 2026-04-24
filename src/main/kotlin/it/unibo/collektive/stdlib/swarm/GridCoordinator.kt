@@ -3,6 +3,7 @@
 
 package it.unibo.collektive.stdlib.swarm
 
+import it.unibo.alchemist.collektive.device.CollektiveDevice
 import it.unibo.collektive.aggregate.api.Aggregate
 import it.unibo.collektive.alchemist.device.sensors.LocationSensor
 import it.unibo.collektive.gridDestination
@@ -27,10 +28,10 @@ import it.unibo.collektive.stdlib.spreading.hopGradientCast
  * @param estimationsHistory Local history of zebra position estimations.
  * @return The next position for the local device.
  */
-context(position: LocationSensor)
+context(position: LocationSensor, device: CollektiveDevice<*>)
 fun Aggregate<Int>.computeDistributedSwarmMovement(
     gridFormationValues: GridFormationValues,
-    bound: Double,
+    bound: Int,
     estimationsHistory: List<ZebraPositionHistory>,
 ): Point {
     val currentPosition = position.selfPosition()
@@ -44,11 +45,11 @@ fun Aggregate<Int>.computeDistributedSwarmMovement(
     if (!estimationsHistory.hasEnoughHistory(gridFormationValues.warmupRounds)) {
         return currentPosition
     }
-    val networkCentroid = networkCentroid(bound.toInt())
+    val networkCentroid = networkCentroid(bound)
     val localContribution = estimationsHistory.latestContribution()
     val distanceFromCentroid = currentPosition.distanceTo(networkCentroid)
     val isCoordinator =
-        isClosestToTarget(distanceFromCentroid, bound.toInt()) // in the leader based scenario, this should be the leader
+        isClosestToTarget(distanceFromCentroid, bound) // in the leader based scenario, this should be the leader
     val totalX = convergeSum(localContribution.sumX, isCoordinator)
     val totalY = convergeSum(localContribution.sumY, isCoordinator)
     val totalCount = convergeSum(localContribution.count, isCoordinator)
@@ -57,7 +58,7 @@ fun Aggregate<Int>.computeDistributedSwarmMovement(
         else -> networkCentroid
     }
     val sharedTarget = hopGradientCast(isCoordinator, if (isCoordinator) coordinatorTarget else networkCentroid)
-    val gridIndex = networkGridIndex(bound.toInt(), gridFormationValues)
+    val gridIndex = networkGridIndex(bound, gridFormationValues)
     if (gridIndex < 0) {
         return currentPosition
     }
