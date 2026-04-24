@@ -23,9 +23,10 @@ fun Aggregate<Int>.informationFilterEntrypointLeaderBased(device: CollektiveDevi
             val sideLength = device["SideLength"] as Int
             val numberOfParticles = device["NumberOfParticles"] as Int
             val maxInitialSpeed = device["MaxInitialSpeed"] as Double
+            val electionBound = device.gridElectionBound(sideLength)
             val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
             with(device) {
-                sensorsExecution(estimations, numberOfParticles, maxInitialSpeed, sideLength.toDouble())
+                sensorsExecution(estimations, numberOfParticles, maxInitialSpeed, sideLength.toDouble(), electionBound)
             }.also { history ->
                 device["Estimations"] = history
             }
@@ -47,7 +48,8 @@ fun Aggregate<Int>.informationFilterEntrypointLeaderBased(device: CollektiveDevi
  * @param estimationsHistory Previously accumulated estimation history.
  * @param numberOfParticles Particle count used by the filter.
  * @param maxInitialSpeed Max initial particle velocity component.
- * @param sideLength Simulation area side length used for initialization and election bound.
+ * @param sideLength Simulation area side length used for initialization.
+ * @param electionBound Hop bound used by bounded leader election.
  * @return Updated zebra position history list.
  */
 context(device: CollektiveDevice<*>, position: LocationSensor)
@@ -56,15 +58,22 @@ fun Aggregate<Int>.sensorsExecution(
     numberOfParticles: Int,
     maxInitialSpeed: Double,
     sideLength: Double,
+    electionBound: Int,
 ): List<ZebraPositionHistory> {
     val targetsPosition = position.targetsPosition()
     val selfPosition = position.selfPosition()
-    val isLeader = isClosestToCentroid(sideLength.toInt()).also { device["isLeader"] = it }
+    val isLeader = isClosestToCentroid(electionBound).also { device["isLeader"] = it }
+    val initializationArea = device.particleInitializationArea(sideLength)
     return evolving(
         ParticleFilter(
-            numberOfParticles,
-            maxInitialSpeed,
-            sideLength,
+            numberOfParticles = numberOfParticles,
+            maxInitialSpeed = maxInitialSpeed,
+            sideLength = sideLength,
+            initialMinX = initializationArea.minX,
+            initialMaxX = initializationArea.maxX,
+            initialMinY = initializationArea.minY,
+            initialMaxY = initializationArea.maxY,
+            clampParticlesToInitializationArea = initializationArea.clampParticles,
             targetsIDs = targetsPosition.map { it.zebraID }.toSet(),
             random = device.randomGenerator,
         ),
@@ -74,7 +83,6 @@ fun Aggregate<Int>.sensorsExecution(
             alignedOn(zebra.zebraID) {
                 device["Particles${zebra.zebraID}"] = filter.getAll(zebra.zebraID)
                 val myMeasure = fromPositionToMeasure(selfPosition, zebra.position, device.randomGenerator)
-//             val isLeader = isClosestToCentroid(sideLength.toInt()).also { device["isLeaderOf${zebra.zebraID}"] = it }
                 val convergedMeasurements =
                     convergeCast(
                         listOf(DistanceFromPosition(selfPosition, myMeasure)),
@@ -102,4 +110,10 @@ fun Aggregate<Int>.sensorsExecution(
         }
         filter.yielding { estimationsHistory.updateHistory(estimations) }
     }
+}
+
+private fun CollektiveDevice<*>.gridElectionBound(fallback: Int): Int {
+    val rows = getOrDefault("FormationRows", 0)
+    val columns = getOrDefault("FormationColumns", 0)
+    return (rows * columns).takeIf { it > 0 } ?: fallback
 }
