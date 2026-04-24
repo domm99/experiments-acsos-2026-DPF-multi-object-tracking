@@ -3,18 +3,17 @@
 
 package it.unibo.collektive.stdlib.swarm
 
-import it.unibo.alchemist.collektive.device.CollektiveDevice
 import it.unibo.collektive.aggregate.api.Aggregate
-import it.unibo.collektive.alchemist.device.currentFiltersCentroid
-import it.unibo.collektive.alchemist.device.filterIndexOf
 import it.unibo.collektive.alchemist.device.sensors.LocationSensor
 import it.unibo.collektive.gridDestination
 import it.unibo.collektive.models.Point
 import it.unibo.collektive.models.ZebraPositionHistory
+import it.unibo.collektive.models.distanceTo
+import it.unibo.collektive.models.hasEnoughHistory
 import it.unibo.collektive.models.latestContribution
 import it.unibo.collektive.moveTowards
 import it.unibo.collektive.stdlib.accumulation.convergeSum
-import it.unibo.collektive.stdlib.election.isClosestToCentroid
+import it.unibo.collektive.stdlib.election.isClosestToTarget
 import it.unibo.collektive.stdlib.spreading.hopGradientCast
 
 /**
@@ -28,38 +27,42 @@ import it.unibo.collektive.stdlib.spreading.hopGradientCast
  * @param estimationsHistory Local history of zebra position estimations.
  * @return The next position for the local device.
  */
-context(device: CollektiveDevice<*>, position: LocationSensor)
+context(position: LocationSensor)
 fun Aggregate<Int>.computeDistributedSwarmMovement(
     gridFormationValues: GridFormationValues,
     bound: Double,
     estimationsHistory: List<ZebraPositionHistory>,
-): Point = evolving(device.environment.currentFiltersCentroid()) { fallbackTarget ->
+): Point {
     val currentPosition = position.selfPosition()
-    var sharedTarget: Point = fallbackTarget
-    val nextPosition: Point = when {
-        (
-            gridFormationValues.rows <= 0 ||
-                gridFormationValues.cols <= 0 ||
-                gridFormationValues.spacing <= 0.0
-            ) -> currentPosition
-        else -> {
-            val localContribution = estimationsHistory.latestContribution()
-            val isCoordinator =
-                isClosestToCentroid(bound.toInt()) // in the leader based scenario, this should be the leader
-            val totalX = convergeSum(localContribution.sumX, isCoordinator)
-            val totalY = convergeSum(localContribution.sumY, isCoordinator)
-            val totalCount = convergeSum(localContribution.count, isCoordinator)
-            val coordinatorTarget = when {
-                totalCount > 0 -> Point(totalX / totalCount, totalY / totalCount)
-                else -> fallbackTarget
-            }
-            sharedTarget = hopGradientCast(isCoordinator, if (isCoordinator) coordinatorTarget else fallbackTarget)
-            val gridIndex = device.environment.filterIndexOf(localId)
-            val desiredPosition = gridDestination(sharedTarget, gridIndex, gridFormationValues)
-            moveTowards(currentPosition, desiredPosition, gridFormationValues.stepSize)
-        }
+    if (
+        gridFormationValues.rows <= 0 ||
+        gridFormationValues.cols <= 0 ||
+        gridFormationValues.spacing <= 0.0
+    ) {
+        return currentPosition
     }
-    sharedTarget.yielding { nextPosition }
+    if (!estimationsHistory.hasEnoughHistory(gridFormationValues.warmupRounds)) {
+        return currentPosition
+    }
+    val networkCentroid = networkCentroid(bound.toInt())
+    val localContribution = estimationsHistory.latestContribution()
+    val distanceFromCentroid = currentPosition.distanceTo(networkCentroid)
+    val isCoordinator =
+        isClosestToTarget(distanceFromCentroid, bound.toInt()) // in the leader based scenario, this should be the leader
+    val totalX = convergeSum(localContribution.sumX, isCoordinator)
+    val totalY = convergeSum(localContribution.sumY, isCoordinator)
+    val totalCount = convergeSum(localContribution.count, isCoordinator)
+    val coordinatorTarget = when {
+        totalCount > 0 -> Point(totalX / totalCount, totalY / totalCount)
+        else -> networkCentroid
+    }
+    val sharedTarget = hopGradientCast(isCoordinator, if (isCoordinator) coordinatorTarget else networkCentroid)
+    val gridIndex = networkGridIndex(bound.toInt(), gridFormationValues)
+    if (gridIndex < 0) {
+        return currentPosition
+    }
+    val desiredPosition = gridDestination(sharedTarget, gridIndex, gridFormationValues)
+    return moveTowards(currentPosition, desiredPosition, gridFormationValues.stepSize)
 }
 
 /**
@@ -75,9 +78,15 @@ data class GridFormationValues(
     val cols: Int,
     val spacing: Double,
     val stepSize: Double,
+    val warmupRounds: Int,
 )
 
 /**
  * Default movement step used when no swarm-specific step size is provided.
  */
 const val DEFAULT_SWARM_STEP_SIZE = 2.0
+
+/**
+ * Default number of filter rounds required before the swarm starts moving.
+ */
+const val DEFAULT_SWARM_WARMUP_ROUNDS = 5
