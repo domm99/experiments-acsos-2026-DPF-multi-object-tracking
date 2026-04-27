@@ -1,4 +1,4 @@
-@file:Suppress("UndocumentedPublicFunction") // detekt does not support context parameters,
+@file:Suppress("IgnoredReturnValue", "UndocumentedPublicFunction") // detekt does not support context parameters,
 // the documentation is present
 
 package it.unibo.collektive
@@ -15,17 +15,23 @@ import it.unibo.collektive.stdlib.swarm.computeDistributedSwarmMovement
 
 /**
  * The entrypoint of the simulation performing local information filtering, without grid movement.
+ *
+ * The updated estimation history is stored back into the `Estimations` molecule.
+ *
+ * @param device Collektive device used to read simulation parameters and persist estimations.
+ * @param position Location sensor used to observe local and target positions.
+ * @return Updated zebra estimation histories.
  */
 fun Aggregate<Int>.informationFilterEntrypoint(device: CollektiveDevice<*>, position: LocationSensor) =
     context(device, device.randomGenerator, position) {
         val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
         val filterConfiguration = device.filterConfiguration
-        localFiltering(
+        val history = localFiltering(
             estimations,
             filterConfiguration,
-        ).also { history ->
-            device["Estimations"] = history
-        }
+        )
+        device["Estimations"] = history
+        history
     }
 
 /**
@@ -34,6 +40,10 @@ fun Aggregate<Int>.informationFilterEntrypoint(device: CollektiveDevice<*>, posi
  * The target is built from the latest estimations available on each node, then aggregated
  * and broadcast through neighbor-to-neighbor coordination. Each node finally stores its
  * own next movement step inside the `NextPosition` molecule.
+ *
+ * @param device Collektive device used to read simulation parameters and persist estimations.
+ * @param position Location sensor used to observe local and target positions.
+ * @return Updated zebra estimation histories.
  */
 fun Aggregate<Int>.informationFilterAndDistributedMovementEntrypoint(
     device: CollektiveDevice<*>,
@@ -48,9 +58,8 @@ fun Aggregate<Int>.informationFilterAndDistributedMovementEntrypoint(
     device["Estimations"] = history
     val gridValues = device.gridFormationValues
     val electionBound = (gridValues.rows * gridValues.cols).takeIf { it > 0 } ?: filterConfiguration.sideLength
-    computeDistributedSwarmMovement(gridValues, electionBound, history).also {
-        device["NextPosition"] = it
-    }
+    val nextPosition = computeDistributedSwarmMovement(gridValues, electionBound, history)
+    device["NextPosition"] = nextPosition
     history
 }
 
@@ -58,8 +67,10 @@ fun Aggregate<Int>.informationFilterAndDistributedMovementEntrypoint(
  * Performs local filtering using a Particle Filter to estimate the position
  * of a target based on neighborhood information.
  *
+ * @param estimationsHistory Previously accumulated estimation history.
  * @param filterConfiguration particle filter settings read from the simulation environment
  * @param position the location sensor providing target position and neighborhood data
+ * @return Updated zebra estimation histories.
  */
 context(device: CollektiveDevice<*>, position: LocationSensor)
 internal fun Aggregate<*>.localFiltering(
@@ -97,6 +108,9 @@ internal fun Aggregate<*>.localFiltering(
  * Utility function that returns a list with the updated [ZebraPositionHistory] given the current [estimations].
  *
  * Existing zebra histories keep their order, while newly observed zebra ids are appended.
+ *
+ * @param estimations Current-round estimates to append by zebra id.
+ * @return Histories containing both previous and current-round estimations.
  */
 internal fun List<ZebraPositionHistory>.updateHistory(
     estimations: List<ZebraPositionHistory>,

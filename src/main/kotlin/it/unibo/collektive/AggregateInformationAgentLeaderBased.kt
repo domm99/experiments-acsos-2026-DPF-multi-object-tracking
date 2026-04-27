@@ -1,4 +1,4 @@
-@file:Suppress("UndocumentedPublicFunction") // detekt does not support context parameters,
+@file:Suppress("IgnoredReturnValue", "UndocumentedPublicFunction") // detekt does not support context parameters,
 // the documentation is present
 
 package it.unibo.collektive
@@ -19,6 +19,12 @@ import it.unibo.collektive.stdlib.swarm.computeDistributedSwarmMovement
 
 /**
  * The entrypoint of the simulation performing local information filtering.
+ *
+ * Down sensors skip the round. Active sensors elect a centroid-based leader, execute
+ * leader-based filtering, and persist the updated `Estimations` molecule.
+ *
+ * @param device Collektive device used to read simulation parameters and persist estimations.
+ * @param position Location sensor used to observe local and target positions.
  */
 fun Aggregate<Int>.informationFilterEntrypointLeaderBased(device: CollektiveDevice<*>, position: LocationSensor) =
     context(device.randomGenerator, position, device) {
@@ -26,15 +32,23 @@ fun Aggregate<Int>.informationFilterEntrypointLeaderBased(device: CollektiveDevi
         if (!isDown) {
             val filterConfiguration = device.filterConfiguration
             val electionBound = device.gridElectionBound(filterConfiguration.sideLength)
-            val isLeader = isClosestToCentroid(electionBound).also { device["isLeader"] = it }
+            val isLeader = isClosestToCentroid(electionBound)
+            device["isLeader"] = isLeader
             val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
-            sensorsExecution(estimations, filterConfiguration, isLeader)
-                .also { history ->
-                    device["Estimations"] = history
-                }
+            val history = sensorsExecution(estimations, filterConfiguration, isLeader)
+            device["Estimations"] = history
         }
     }
 
+/**
+ * Runs leader-based filtering and computes the next movement step for active sensors.
+ *
+ * The elected leader uses hysteresis to avoid frequent leadership changes. Each active sensor stores
+ * its updated estimation history in `Estimations` and its planned movement in `NextPosition`.
+ *
+ * @param device Collektive device used to read simulation parameters and persist output molecules.
+ * @param position Location sensor used to observe local and target positions.
+ */
 fun Aggregate<Int>.entrypointMovingSensorsLeaderBased(device: CollektiveDevice<*>, position: LocationSensor) =
     context(device, device.randomGenerator, position) {
         val isDown = device["isDown"] as Boolean
@@ -43,15 +57,13 @@ fun Aggregate<Int>.entrypointMovingSensorsLeaderBased(device: CollektiveDevice<*
             val gridValues = device.gridFormationValues
             val electionBound = (gridValues.rows * gridValues.cols).takeIf { it > 0 } ?: filterConfiguration.sideLength
             val switchMargin = device.leaderSwitchMargin(gridValues.spacing)
-            val isLeader = isClosestToCentroidWithHysteresis(electionBound, switchMargin).also {
-                device["isLeader"] = it
-            }
+            val isLeader = isClosestToCentroidWithHysteresis(electionBound, switchMargin)
+            device["isLeader"] = isLeader
             val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
             val history = sensorsExecution(estimations, filterConfiguration, isLeader)
             device["Estimations"] = history
-            computeDistributedSwarmMovement(gridValues, electionBound, history, isLeader).also {
-                device["NextPosition"] = it
-            }
+            val nextPosition = computeDistributedSwarmMovement(gridValues, electionBound, history, isLeader)
+            device["NextPosition"] = nextPosition
         }
     }
 
@@ -59,7 +71,7 @@ fun Aggregate<Int>.entrypointMovingSensorsLeaderBased(device: CollektiveDevice<*
  * Runs one sensing/filtering round and returns updated zebra estimation histories.
  * 1. Read currently visible target positions and local position;
  * 2. Elect a leader;
- * 3. Maintain a persistent [ParticleFilter] via `evolving(...)`;
+ * 3. Maintain a persistent particle filter via `evolving(...)`;
  * 4. For each target zebra:
  *    align computation by zebra id,
  *    collect local noisy measure,

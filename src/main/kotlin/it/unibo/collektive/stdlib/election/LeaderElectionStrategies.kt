@@ -1,3 +1,5 @@
+@file:Suppress("UndocumentedPublicFunction") // detekt does not support context parameters.
+
 package it.unibo.collektive.stdlib.election
 
 import it.unibo.collektive.aggregate.api.Aggregate
@@ -29,6 +31,10 @@ fun Aggregate<Int>.isClosestToCentroid(bound: Int): Boolean =
 /**
  * Elects a leader close to the network centroid, keeping the previous leader
  * while alternative candidates are only marginally closer.
+ *
+ * @param bound Election bound, expected to cover the filter grid diameter.
+ * @param switchMargin Minimum distance improvement required before a new leader replaces the previous one.
+ * @return `true` if this device is elected as leader, `false` otherwise.
  */
 context(position: LocationSensor)
 fun Aggregate<Int>.isClosestToCentroidWithHysteresis(bound: Int, switchMargin: Double): Boolean =
@@ -39,6 +45,10 @@ fun Aggregate<Int>.isClosestToCentroidWithHysteresis(bound: Int, switchMargin: D
  *
  * An id-based tie-break keeps the result deterministic when multiple devices are at the
  * same distance from the target, which happens often in symmetric fixed grids.
+ *
+ * @param target Point the elected leader should be close to.
+ * @param electionBound Election bound passed to [boundedElection].
+ * @return Identifier of the elected leader.
  */
 context(position: LocationSensor)
 fun Aggregate<Int>.leaderClosestToPoint(target: Point, electionBound: Int): Int {
@@ -52,6 +62,11 @@ fun Aggregate<Int>.leaderClosestToPoint(target: Point, electionBound: Int): Int 
  *
  * The previously accepted leader receives a distance-equivalent bonus, so another node takes over
  * only if it is at least [switchMargin] closer to [target].
+ *
+ * @param target Point the elected leader should be close to.
+ * @param bound Election bound passed to [boundedElection].
+ * @param switchMargin Minimum distance improvement required before a new leader replaces the previous one.
+ * @return Identifier of the elected leader after hysteresis is applied.
  */
 context(position: LocationSensor)
 fun Aggregate<Int>.leaderClosestToPointWithHysteresis(target: Point, bound: Int, switchMargin: Double): Int =
@@ -78,6 +93,13 @@ inline fun <reified ID : Comparable<ID>> Aggregate<ID>.isClosestToTarget(
     bound: Int,
 ): Boolean = isBoundedElectionWinner(centralityWeight(distanceToTarget, bound / 2.0), bound)
 
+/**
+ * Checks whether this device wins a bounded election with the provided [weight].
+ *
+ * @param weight Comparable election strength for the local device.
+ * @param bound Bound passed to [boundedElection].
+ * @return `true` when [boundedElection] returns the local id.
+ */
 inline fun <reified ID : Comparable<ID>, reified Type : Comparable<Type>> Aggregate<ID>.isBoundedElectionWinner(
     weight: Type,
     bound: Int,

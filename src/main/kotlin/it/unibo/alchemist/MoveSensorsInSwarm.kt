@@ -13,6 +13,10 @@ import it.unibo.collektive.models.Point
  * Moves sensor nodes according to the next position computed by the collective program.
  *
  * Grid parameters are kept in the constructor only for backward compatibility with the YAML action signature.
+ *
+ * @property gridRows Number of formation rows passed by the YAML action signature.
+ * @property gridColumns Number of formation columns passed by the YAML action signature.
+ * @property spacing Formation spacing passed by the YAML action signature.
  */
 class MoveSensorsInSwarm<T>(
     environment: Environment<T, Euclidean2DPosition>,

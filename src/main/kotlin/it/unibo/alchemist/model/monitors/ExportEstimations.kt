@@ -29,6 +29,7 @@ fun <T> hasEstimations(node: Node<T>): Boolean {
  *
  * @property seed simulation seed used in output filenames
  * @property numberOfNeighbors neighborhood size used in output filenames
+ * @property errorOnDesiredPosition desired-position offset used in output filenames
  * @property path destination directory for generated CSV files
  */
 class ExportEstimations<T>(
