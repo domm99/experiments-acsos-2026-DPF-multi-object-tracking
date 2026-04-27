@@ -179,8 +179,12 @@ if __name__ == '__main__':
     # ---------------------------------------------------------
 
     # Setup regex to extract parameters from filenames
-    # Example filename: estimations_zebra35_node-10_n-0_seed-42.0.csv
-    file_pattern = re.compile(r'estimations_zebra(\d+)_node-(\d+)_n-(\d+)_seed-([\d\.]+)\.csv')
+    # Example filename: estimations_zebra35_node-10_n-0_errorOnPosition-0.0_seed-42.0.csv
+    file_pattern = re.compile(
+        r'estimations_zebra(?P<zebra>\d+)_node-(?P<node>\d+)_n-(?P<n>\d+)'
+        r'(?:_errorOnPosition-(?P<error_on_position>-?\d+(?:\.\d+)?))?'
+        r'_seed-(?P<seed>-?\d+(?:\.\d+)?)\.csv$'
+    )
 
     # Iterate over each defined experiment
     for current_experiment in experiments:
@@ -208,7 +212,8 @@ if __name__ == '__main__':
             print(f"No estimation files found in '{exp_data_path}'. Skipping...")
             continue
 
-        # Group files by (zebra_id, n) ONLY to aggregate across multiple nodes AND multiple seeds
+        # Group files by (zebra_id, n, error_on_position) so different YAML-driven
+        # error settings are kept separate instead of being merged together.
         grouped_files = defaultdict(list)
 
         # Track discovered zebras just for logging purposes
@@ -220,19 +225,23 @@ if __name__ == '__main__':
             match = file_pattern.search(filename)
 
             if match:
-                zid, node, n, seed = match.groups()
-                zid, n = int(zid), int(n)
+                metadata = match.groupdict()
+                zid = int(metadata['zebra'])
+                n = int(metadata['n'])
+                error_on_position = metadata['error_on_position']
+                error_on_position = float(error_on_position) if error_on_position is not None else None
 
                 # Automatically process any zebra ID found in the folder
-                grouped_files[(zid, n)].append(file_path)
+                grouped_files[(zid, n, error_on_position)].append(file_path)
                 discovered_zebras.add(zid)
 
         print(f"Discovered zebras in this experiment: {sorted(list(discovered_zebras))}")
 
-        # Re-organize configurations by (n) so we can plot multiple zebras together
+        # Re-organize configurations by (n, error_on_position) so we can plot
+        # multiple zebras together without mixing different position errors.
         scenarios = defaultdict(list)
 
-        for (zid, n), files in grouped_files.items():
+        for (zid, n, error_on_position), files in grouped_files.items():
             dfs = []
             for f in files:
                 dfs.append(read_estimation(f))
@@ -261,17 +270,19 @@ if __name__ == '__main__':
                 'estimation': df_estimation_aggregated
             }
 
-            scenarios[n].append((zid, entity))
+            scenarios[(n, error_on_position)].append((zid, entity))
 
         # Generate configurations for isolated and combined plots
         plot_configs = {}
 
-        for n, entities_list in scenarios.items():
+        for (n, error_on_position), entities_list in scenarios.items():
 
             combined_entities = []
 
             # Determine the suffix to use based on experiment type, applying LaTeX styling for N
             exp_suffix = "Leader Based" if is_lb_experiment else f"Neighbor Based $|N|={n}$"
+            if error_on_position is not None:
+                exp_suffix = f"{exp_suffix} (errorOnPosition={error_on_position:g})"
 
             for zid, entity in entities_list:
                 # 1. Configuration for isolated plot
