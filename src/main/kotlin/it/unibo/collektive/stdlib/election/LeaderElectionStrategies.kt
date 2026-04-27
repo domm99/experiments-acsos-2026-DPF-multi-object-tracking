@@ -5,6 +5,7 @@ package it.unibo.collektive.stdlib.election
 
 import it.unibo.alchemist.collektive.device.CollektiveDevice
 import it.unibo.collektive.aggregate.api.Aggregate
+import it.unibo.collektive.aggregate.api.share
 import it.unibo.collektive.alchemist.device.sensors.LocationSensor
 import it.unibo.collektive.centralityWeight
 import it.unibo.collektive.models.Point
@@ -31,11 +32,26 @@ fun Aggregate<Int>.isClosestToCentroid(bound: Int): Boolean =
     leaderClosestToCentroid(bound) == localId
 
 /**
+ * Elects a leader close to the network centroid, keeping the previous leader
+ * while alternative candidates are only marginally closer.
+ */
+context(position: LocationSensor, device: CollektiveDevice<*>)
+fun Aggregate<Int>.isClosestToCentroidWithHysteresis(bound: Int, switchMargin: Double): Boolean =
+    leaderClosestToCentroidWithHysteresis(bound, switchMargin) == localId
+
+/**
  * Elects a leader by favoring devices closer to the network centroid and returns its identifier.
  */
 context(position: LocationSensor, device: CollektiveDevice<*>)
 fun Aggregate<Int>.leaderClosestToCentroid(bound: Int): Int =
     leaderClosestToPoint(networkCentroid(bound), bound)
+
+/**
+ * Elects a leader close to the network centroid and returns the temporally filtered identifier.
+ */
+context(position: LocationSensor, device: CollektiveDevice<*>)
+fun Aggregate<Int>.leaderClosestToCentroidWithHysteresis(bound: Int, switchMargin: Double): Int =
+    leaderClosestToPointWithHysteresis(networkCentroid(bound), bound, switchMargin)
 
 /**
  * Elects a leader by favoring devices closer to a target point and returns its identifier.
@@ -51,6 +67,25 @@ fun Aggregate<Int>.leaderClosestToPoint(target: Point, bound: Int): Int {
 }
 
 /**
+ * Elects a leader by favoring nodes closer to [target], with a low-pass effect on leader changes.
+ *
+ * The previously accepted leader receives a distance-equivalent bonus, so another node takes over
+ * only if it is at least [switchMargin] closer to [target].
+ */
+context(position: LocationSensor, device: CollektiveDevice<*>)
+fun Aggregate<Int>.leaderClosestToPointWithHysteresis(target: Point, bound: Int, switchMargin: Double): Int =
+    share(localId) { previousLeader ->
+        val acceptedLeader = previousLeader.local.value
+        val dist = position.coordinates().distanceTo(target).also { device["dist"] = it }
+        val margin = switchMargin.coerceAtLeast(0.0).also { device["leaderSwitchMargin"] = it }
+        val stickyBonus = if (localId == acceptedLeader) margin else 0.0
+        val strength = (-dist + stickyBonus + localId * LEADER_TIE_BREAK_SCALE).also { device["strength"] = it }
+        val electedLeader = boundedElection(strength = strength, bound = bound).also { device["closest?"] = it }
+        device["previousLeader"] = acceptedLeader
+        electedLeader
+    }
+
+/**
  * Elects a leader by favoring devices closer to a target point.
  *
  * The caller provides [distanceToTarget]; smaller distances produce larger
@@ -61,7 +96,10 @@ fun Aggregate<Int>.leaderClosestToPoint(target: Point, bound: Int): Int {
  * @param bound Election bound (maximum id-space/window used by [boundedElection]).
  * @return `true` if this device is elected as leader, `false` otherwise.
  */
-fun Aggregate<Int>.isClosestToTarget(distanceToTarget: Double, bound: Int): Boolean {
+inline fun <reified ID : Comparable<ID>> Aggregate<ID>.isClosestToTarget(
+    distanceToTarget: Double,
+    bound: Int,
+): Boolean {
     val weight = centralityWeight(distanceToTarget, bound / 2.0) // the highest, the closest to the center
     return boundedElection(strength = weight, bound = bound) == localId
 }
