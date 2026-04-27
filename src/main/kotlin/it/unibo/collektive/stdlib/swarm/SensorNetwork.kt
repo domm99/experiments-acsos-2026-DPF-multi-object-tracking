@@ -9,7 +9,7 @@ import it.unibo.collektive.models.gridColumnIndex
 import it.unibo.collektive.models.gridRowIndex
 import it.unibo.collektive.stdlib.accumulation.convergeCast
 import it.unibo.collektive.stdlib.consensus.boundedElection
-import it.unibo.collektive.stdlib.election.isLeader
+import it.unibo.collektive.stdlib.election.isBoundedElectionWinner
 import it.unibo.collektive.stdlib.spreading.hopGradientCast
 
 context(position: LocationSensor)
@@ -45,7 +45,7 @@ inline fun <reified ID : Comparable<ID>> Aggregate<ID>.networkGridIndex(
     bound: Int,
     gridFormationValues: GridFormationValues,
 ): Int {
-    val isInformationLeader = isLeader(localId, bound)
+    val isInformationLeader = isBoundedElectionWinner(localId, bound)
     return networkGridIndex(isInformationLeader, gridFormationValues)
 }
 
