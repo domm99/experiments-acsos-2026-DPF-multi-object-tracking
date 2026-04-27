@@ -8,11 +8,9 @@ import it.unibo.collektive.aggregate.FieldEntry
 import it.unibo.collektive.aggregate.api.Aggregate
 import it.unibo.collektive.aggregate.api.neighboring
 import it.unibo.collektive.alchemist.device.sensors.LocationSensor
+import it.unibo.collektive.alchemist.device.sensors.gridFormationValues
 import it.unibo.collektive.models.DistanceFromPosition
 import it.unibo.collektive.models.ZebraPositionHistory
-import it.unibo.collektive.stdlib.swarm.DEFAULT_SWARM_STEP_SIZE
-import it.unibo.collektive.stdlib.swarm.DEFAULT_SWARM_WARMUP_ROUNDS
-import it.unibo.collektive.stdlib.swarm.GridFormationValues
 import it.unibo.collektive.stdlib.swarm.computeDistributedSwarmMovement
 import it.unibo.filtering.ParticleFilter
 
@@ -52,14 +50,7 @@ fun Aggregate<Int>.informationFilterAndDistributedMovementEntrypoint(
         sideLength.toDouble(),
     )
     device["Estimations"] = history
-    val gridValues = GridFormationValues(
-        device.getOrDefault("FormationRows", 0),
-        device.getOrDefault("FormationColumns", 0),
-        device.getOrDefault("FormationSpacing", 0.0),
-        device.getOrDefault("SwarmStepSize", DEFAULT_SWARM_STEP_SIZE),
-        device.getOrDefault("SwarmWarmupRounds", DEFAULT_SWARM_WARMUP_ROUNDS),
-        device.getOrDefault("ErrorOnDesiredPosition", 0.0)
-    )
+    val gridValues = device.gridFormationValues
     val electionBound = (gridValues.rows * gridValues.cols).takeIf { it > 0 } ?: sideLength
     computeDistributedSwarmMovement(gridValues, electionBound, history).also {
         device["NextPosition"] = it
