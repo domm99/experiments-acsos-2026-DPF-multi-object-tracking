@@ -97,14 +97,14 @@ _movementZebra38: &movementZebra38
         parameters:
           - "zebras-trajectories/flights/flight_1_zebras/zebra_038.csv"
 
-#environment:
-#  type: Continuous2DEnvironment
-#  parameters: [ ]
-#  global-programs:
-#    - time-distribution:
-#        type: Trigger
-#        parameters: [ 700 ]
-#      type: KillLeader
+environment:
+  type: Continuous2DEnvironment
+  parameters: [ ]
+  global-programs:
+    - time-distribution:
+        type: Trigger
+        parameters: [ 700 ]
+      type: KillLeader
 
 _pool: &program
   - time-distribution: 1
