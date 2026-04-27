@@ -1,6 +1,5 @@
 package it.unibo.collektive.stdlib.swarm
 
-import it.unibo.alchemist.collektive.device.CollektiveDevice
 import it.unibo.collektive.aggregate.FieldEntry
 import it.unibo.collektive.aggregate.api.Aggregate
 import it.unibo.collektive.aggregate.api.sharing
@@ -12,31 +11,32 @@ import it.unibo.collektive.stdlib.spreading.hopGradientCast
 import kotlin.math.roundToInt
 
 @PublishedApi
-internal data class CentroidAccumulator(val sumX: Double, val sumY: Double, val count: Int) {
+internal data class CentroidAccumulator(val sumPoint: Point, val count: Int) {
     operator fun plus(other: CentroidAccumulator): CentroidAccumulator =
-        CentroidAccumulator(sumX + other.sumX, sumY + other.sumY, count + other.count)
+        CentroidAccumulator( Point(sumPoint.x + other.sumPoint.x, sumPoint.y + other.sumPoint.y), count + other.count)
 
     fun centroidOr(default: Point): Point = when (count) {
         0 -> default
-        else -> Point(sumX / count, sumY / count)
+        else -> Point(sumPoint.x / count, sumPoint.y / count)
     }
 }
 
-context(position: LocationSensor, device: CollektiveDevice<*>)
-inline fun <reified ID : Comparable<ID>> Aggregate<ID>.networkCentroid(bound: Int): Point {
-    val isInformationLeader = boundedElection(bound = bound, strength = localId) == localId
-    return networkCentroid(isInformationLeader)
-}
-
-context(position: LocationSensor, device: CollektiveDevice<*>)
-inline fun <reified ID : Comparable<ID>> Aggregate<ID>.networkCentroid(isInformationLeader: Boolean): Point {
+context(position: LocationSensor)
+inline fun <reified ID : Comparable<ID>> Aggregate<ID>.networkCentroid(isLeader: Boolean? = null, bound: Int? = null): Point {
+    val isInformationLeader = when {
+        isLeader == null -> {
+            requireNotNull(bound)
+            boundedElection(bound = bound, strength = localId) == localId
+        }
+        else -> isLeader
+    }
     val currentPosition = position.selfPosition()
-    val shared = convergeCast(
-        CentroidAccumulator(currentPosition.x, currentPosition.y, 1),
+    val accumulated = convergeCast(
+        CentroidAccumulator(currentPosition, 1),
         isInformationLeader,
-    ) { acc, next -> acc + next }.also { device["Shared"] = it }
-    val centroid = shared.centroidOr(currentPosition)
-    return hopGradientCast(isInformationLeader, centroid).also { device["Centroid"] = it }
+    ) { acc, next -> acc + next }
+    val centroid = accumulated.centroidOr(currentPosition)
+    return hopGradientCast(isInformationLeader, centroid)
 }
 
 context(position: LocationSensor)
