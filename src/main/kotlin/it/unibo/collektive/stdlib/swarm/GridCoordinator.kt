@@ -9,13 +9,12 @@ import it.unibo.collektive.alchemist.device.sensors.LocationSensor
 import it.unibo.collektive.gridDestination
 import it.unibo.collektive.models.Point
 import it.unibo.collektive.models.ZebraPositionHistory
-import it.unibo.collektive.models.distanceTo
 import it.unibo.collektive.models.hasEnoughHistory
 import it.unibo.collektive.models.latestContribution
 import it.unibo.collektive.models.plus
 import it.unibo.collektive.moveTowards
 import it.unibo.collektive.stdlib.accumulation.convergeSum
-import it.unibo.collektive.stdlib.election.isClosestToTarget
+import it.unibo.collektive.stdlib.election.isClosestToCentroid
 import it.unibo.collektive.stdlib.spreading.hopGradientCast
 
 /**
@@ -34,6 +33,7 @@ fun Aggregate<Int>.computeDistributedSwarmMovement(
     gridFormationValues: GridFormationValues,
     bound: Int,
     estimationsHistory: List<ZebraPositionHistory>,
+    isLeader: Boolean? = null, // if null, it is the neighboring-based scenario
 ): Point {
     val currentPosition = position.selfPosition()
     if (
@@ -43,30 +43,55 @@ fun Aggregate<Int>.computeDistributedSwarmMovement(
     ) {
         return currentPosition
     }
-    if (!estimationsHistory.hasEnoughHistory(gridFormationValues.warmupRounds)) {
+    val leaderBased = isLeader != null
+    if (!leaderBased && !estimationsHistory.hasEnoughHistory(gridFormationValues.warmupRounds)) {
         return currentPosition
     }
-    val networkCentroid = networkCentroid(bound)
-    val localContribution = estimationsHistory.latestContribution()
-    val distanceFromCentroid = currentPosition.distanceTo(networkCentroid)
-    val isCoordinator =
-        isClosestToTarget(distanceFromCentroid, bound) // in the leader based scenario, this should be the leader
-    val totalX = convergeSum(localContribution.sumX, isCoordinator)
-    val totalY = convergeSum(localContribution.sumY, isCoordinator)
-    val totalCount = convergeSum(localContribution.count, isCoordinator)
+    val isCoordinator = when {
+        isLeader == null -> isClosestToCentroid(bound)
+        else -> isLeader
+    }
+    val networkCentroid = when {
+        isLeader == null -> networkCentroid(bound)
+        else -> networkCentroid(isCoordinator)
+    }
     val coordinatorTarget = when {
-        totalCount > 0 -> Point(totalX / totalCount, totalY / totalCount)
-        else -> networkCentroid
+        leaderBased -> {
+            val leaderTarget = estimationsHistory.targetOrNull(gridFormationValues.warmupRounds)
+            if (isCoordinator && leaderTarget != null) leaderTarget else networkCentroid
+        }
+        else -> {
+            val localContribution = estimationsHistory.latestContribution()
+            val totalX = convergeSum(localContribution.sumX, isCoordinator)
+            val totalY = convergeSum(localContribution.sumY, isCoordinator)
+            val totalCount = convergeSum(localContribution.count, isCoordinator)
+            when {
+                totalCount > 0 -> Point(totalX / totalCount, totalY / totalCount)
+                else -> networkCentroid
+            }
+        }
     }
     val sharedTarget = hopGradientCast(isCoordinator, if (isCoordinator) coordinatorTarget else networkCentroid)
-    val gridIndex = networkGridIndex(bound, gridFormationValues)
-    if (gridIndex < 0) {
-        return currentPosition
+    val gridIndex = when {
+        isLeader == null -> networkGridIndex(bound, gridFormationValues)
+        else -> networkGridIndex(isCoordinator, gridFormationValues)
     }
+    if (gridIndex < 0) return currentPosition
     val desiredPosition = gridDestination(sharedTarget, gridIndex, gridFormationValues)
     val desiredPositionWithError = desiredPosition
         .plus(Point(gridFormationValues.errorOnDesiredPosition, gridFormationValues.errorOnDesiredPosition))
     return moveTowards(currentPosition, desiredPositionWithError, gridFormationValues.stepSize)
+}
+
+private fun List<ZebraPositionHistory>.targetOrNull(warmupRounds: Int): Point? {
+    if (!hasEnoughHistory(warmupRounds)) {
+        return null
+    }
+    val contribution = latestContribution()
+    return when {
+        contribution.count > 0 -> Point(contribution.sumX / contribution.count, contribution.sumY / contribution.count)
+        else -> null
+    }
 }
 
 /**
@@ -86,12 +111,3 @@ data class GridFormationValues(
     val errorOnDesiredPosition: Double,
 )
 
-/**
- * Default movement step used when no swarm-specific step size is provided.
- */
-const val DEFAULT_SWARM_STEP_SIZE = 2.0
-
-/**
- * Default number of filter rounds required before the swarm starts moving.
- */
-const val DEFAULT_SWARM_WARMUP_ROUNDS = 5
