@@ -10,7 +10,7 @@ import it.unibo.collektive.models.latestContribution
 import it.unibo.collektive.models.plus
 import it.unibo.collektive.moveTowards
 import it.unibo.collektive.stdlib.accumulation.convergeSum
-import it.unibo.collektive.stdlib.election.isClosestToCentroid
+import it.unibo.collektive.stdlib.election.leaderClosestToPoint
 import it.unibo.collektive.stdlib.spreading.hopGradientCast
 
 /**
@@ -47,8 +47,8 @@ private fun Aggregate<Int>.nextSwarmPosition(
     estimationsHistory: List<ZebraPositionHistory>,
     isLeader: Boolean?,
 ): Point {
-    val isCoordinator = coordinatorFor(isLeader, bound)
-    val networkCentroid = networkCentroidFor(isLeader, isCoordinator, bound)
+    val networkCentroid = networkCentroidFor(isLeader, bound)
+    val isCoordinator = coordinatorFor(isLeader, networkCentroid, bound)
     val coordinatorTarget = coordinatorTarget(
         leaderBased = isLeader != null,
         isCoordinator = isCoordinator,
@@ -73,13 +73,13 @@ private fun List<ZebraPositionHistory>.needsWarmup(leaderBased: Boolean, warmupR
     !leaderBased && !hasEnoughHistory(warmupRounds)
 
 context(position: LocationSensor)
-private fun Aggregate<Int>.coordinatorFor(isLeader: Boolean?, bound: Int): Boolean =
-    isLeader ?: isClosestToCentroid(bound)
+private fun Aggregate<Int>.coordinatorFor(isLeader: Boolean?, networkCentroid: Point, bound: Int): Boolean =
+    isLeader ?: (leaderClosestToPoint(networkCentroid, bound) == localId)
 
 context(position: LocationSensor)
-private fun Aggregate<Int>.networkCentroidFor(isLeader: Boolean?, isCoordinator: Boolean, bound: Int): Point = when {
+private fun Aggregate<Int>.networkCentroidFor(isLeader: Boolean?, bound: Int): Point = when {
     isLeader == null -> networkCentroid(bound = bound)
-    else -> networkCentroid(isCoordinator)
+    else -> networkCentroid(isLeader)
 }
 
 private fun Aggregate<Int>.coordinatorTarget(
