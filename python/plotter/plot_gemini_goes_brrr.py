@@ -171,7 +171,7 @@ if __name__ == '__main__':
     flight_number = 1
 
     # Define the list of experiment names. These must match the subfolder names inside "data/"
-    experiments = ['fixedSensorsNB', 'fixedSensorsLB', 'movingSensorsNB']
+    experiments = ['fixedSensorsNB', 'fixedSensorsLB', 'movingSensorsNB', 'movingSensorsLB']
 
     base_charts_path = 'charts'
     base_data_path = 'data'
