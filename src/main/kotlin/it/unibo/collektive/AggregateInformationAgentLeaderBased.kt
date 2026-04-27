@@ -16,7 +16,6 @@ import it.unibo.collektive.stdlib.accumulation.convergeCast
 import it.unibo.collektive.stdlib.election.isClosestToCentroid
 import it.unibo.collektive.stdlib.election.isClosestToCentroidWithHysteresis
 import it.unibo.collektive.stdlib.swarm.computeDistributedSwarmMovement
-import it.unibo.filtering.ParticleFilter
 
 /**
  * The entrypoint of the simulation performing local information filtering.
@@ -25,13 +24,11 @@ fun Aggregate<Int>.informationFilterEntrypointLeaderBased(device: CollektiveDevi
     context(device.randomGenerator, position, device) {
         val isDown = device["isDown"] as Boolean
         if (!isDown) {
-            val sideLength = device["SideLength"] as Int
-            val numberOfParticles = device["NumberOfParticles"] as Int
-            val maxInitialSpeed = device["MaxInitialSpeed"] as Double
-            val electionBound = device.gridElectionBound(sideLength)
+            val filterConfiguration = device.filterConfiguration
+            val electionBound = device.gridElectionBound(filterConfiguration.sideLength)
             val isLeader = isClosestToCentroid(electionBound).also { device["isLeader"] = it }
             val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
-            sensorsExecution(estimations, numberOfParticles, maxInitialSpeed, sideLength.toDouble(), isLeader)
+            sensorsExecution(estimations, filterConfiguration, isLeader)
                 .also { history ->
                     device["Estimations"] = history
                 }
@@ -42,18 +39,15 @@ fun Aggregate<Int>.entrypointMovingSensorsLeaderBased(device: CollektiveDevice<*
     context(device, device.randomGenerator, position) {
         val isDown = device["isDown"] as Boolean
         if (!isDown) {
-            val sideLength = device["SideLength"] as Int
-            val numberOfParticles = device["NumberOfParticles"] as Int
-            val maxInitialSpeed = device["MaxInitialSpeed"] as Double
+            val filterConfiguration = device.filterConfiguration
             val gridValues = device.gridFormationValues
-            val electionBound = (gridValues.rows * gridValues.cols).takeIf { it > 0 } ?: sideLength
+            val electionBound = (gridValues.rows * gridValues.cols).takeIf { it > 0 } ?: filterConfiguration.sideLength
             val switchMargin = device.leaderSwitchMargin(gridValues.spacing)
             val isLeader = isClosestToCentroidWithHysteresis(electionBound, switchMargin).also {
                 device["isLeader"] = it
             }
             val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
-            val history =
-                sensorsExecution(estimations, numberOfParticles, maxInitialSpeed, sideLength.toDouble(), isLeader)
+            val history = sensorsExecution(estimations, filterConfiguration, isLeader)
             device["Estimations"] = history
             computeDistributedSwarmMovement(gridValues, electionBound, history, isLeader).also {
                 device["NextPosition"] = it
@@ -74,36 +68,20 @@ fun Aggregate<Int>.entrypointMovingSensorsLeaderBased(device: CollektiveDevice<*
  * 5. Merge current-round estimates with prior [estimationsHistory] and return the updated history.
  *
  * @param estimationsHistory Previously accumulated estimation history.
- * @param numberOfParticles Particle count used by the filter.
- * @param maxInitialSpeed Max initial particle velocity component.
- * @param sideLength Simulation area side length used for initialization.
+ * @param filterConfiguration Particle filter settings read from the simulation environment.
  * @param isLeader Whether this node is the elected sink for measurement aggregation.
  * @return Updated zebra position history list.
  */
 context(device: CollektiveDevice<*>, position: LocationSensor)
-fun Aggregate<Int>.sensorsExecution(
+internal fun Aggregate<Int>.sensorsExecution(
     estimationsHistory: List<ZebraPositionHistory>,
-    numberOfParticles: Int,
-    maxInitialSpeed: Double,
-    sideLength: Double,
+    filterConfiguration: FilterConfiguration,
     isLeader: Boolean,
 ): List<ZebraPositionHistory> {
     val targetsPosition = position.targetsPosition()
     val selfPosition = position.selfPosition()
-    val initializationArea = device.particleInitializationArea(sideLength)
     return evolving(
-        ParticleFilter(
-            numberOfParticles = numberOfParticles,
-            maxInitialSpeed = maxInitialSpeed,
-            sideLength = sideLength,
-            initialMinX = initializationArea.minX,
-            initialMaxX = initializationArea.maxX,
-            initialMinY = initializationArea.minY,
-            initialMaxY = initializationArea.maxY,
-            clampParticlesToInitializationArea = initializationArea.clampParticles,
-            targetsIDs = targetsPosition.map { it.zebraID }.toSet(),
-            random = device.randomGenerator,
-        ),
+        device.createParticleFilter(filterConfiguration, targetsPosition.map { it.zebraID }.toSet()),
     ) { filter ->
         val estimations = mutableListOf<ZebraPositionHistory>()
         for (zebra in targetsPosition) {
