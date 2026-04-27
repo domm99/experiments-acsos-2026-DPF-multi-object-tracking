@@ -27,7 +27,7 @@ private const val LEADER_TIE_BREAK_SCALE = 1e-9
  * @param bound Election bound, expected to cover the filter grid diameter.
  * @return `true` if this device is elected as leader, `false` otherwise.
  */
-context(position: LocationSensor, device: CollektiveDevice<*>)
+context(position: LocationSensor)
 fun Aggregate<Int>.isClosestToCentroid(bound: Int): Boolean = leaderClosestToCentroid(bound) == localId
 
 /**
@@ -41,7 +41,7 @@ fun Aggregate<Int>.isClosestToCentroidWithHysteresis(bound: Int, switchMargin: D
 /**
  * Elects a leader by favoring devices closer to the network centroid and returns its identifier.
  */
-context(position: LocationSensor, device: CollektiveDevice<*>)
+context(position: LocationSensor)
 fun Aggregate<Int>.leaderClosestToCentroid(bound: Int): Int = leaderClosestToPoint(networkCentroid(bound), bound)
 
 /**
@@ -57,11 +57,11 @@ fun Aggregate<Int>.leaderClosestToCentroidWithHysteresis(bound: Int, switchMargi
  * An id-based tie-break keeps the result deterministic when multiple devices are at the
  * same distance from the target, which happens often in symmetric fixed grids.
  */
-context(position: LocationSensor, device: CollektiveDevice<*>)
+context(position: LocationSensor)
 fun Aggregate<Int>.leaderClosestToPoint(target: Point, bound: Int): Int {
-    val dist = position.coordinates().distanceTo(target).also { device["dist"] = it }
-    val strength = (-dist + localId * LEADER_TIE_BREAK_SCALE).also { device["strength"] = it }
-    return boundedElection(strength = strength, bound = bound).also { device["closest?"] = it }
+    val dist = position.coordinates().distanceTo(target)
+    val strength = (-dist + localId * LEADER_TIE_BREAK_SCALE)
+    return boundedElection(strength = strength, bound = bound)
 }
 
 /**
