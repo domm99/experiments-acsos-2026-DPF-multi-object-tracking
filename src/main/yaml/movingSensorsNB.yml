@@ -170,8 +170,6 @@ deployments:
         concentration: *particleInitMaxY
       - molecule: NumberOfNeighbors
         concentration: *numberOfNeighbors
-      - molecule: isDown
-        concentration: false
       - molecule: FormationRows
         concentration: *formationRows
       - molecule: FormationColumns
