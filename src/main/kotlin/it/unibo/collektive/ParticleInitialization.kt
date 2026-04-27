@@ -2,14 +2,6 @@ package it.unibo.collektive
 
 import it.unibo.alchemist.collektive.device.CollektiveDevice
 
-internal data class ParticleInitializationArea(
-    val minX: Double,
-    val maxX: Double,
-    val minY: Double,
-    val maxY: Double,
-    val clampParticles: Boolean,
-)
-
 internal fun CollektiveDevice<*>.particleInitializationArea(sideLength: Double): ParticleInitializationArea {
     val halfSideLength = sideLength / 2.0
     return ParticleInitializationArea(
@@ -20,3 +12,11 @@ internal fun CollektiveDevice<*>.particleInitializationArea(sideLength: Double):
         clampParticles = getOrDefault("ClampParticlesToInitializationArea", false),
     )
 }
+
+internal data class ParticleInitializationArea(
+    val minX: Double,
+    val maxX: Double,
+    val minY: Double,
+    val maxY: Double,
+    val clampParticles: Boolean,
+)
