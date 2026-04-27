@@ -42,14 +42,10 @@ class ExportEstimations<T>(
     override fun finished(environment: Environment<T?, Euclidean2DPosition>, time: Time, step: Long) {
         try {
             val outputDir = File(path)
-            if (!outputDir.exists() && !outputDir.mkdirs()) {
-                error("Cannot create output directory: $path")
-            }
-
+            if (!outputDir.exists() && !outputDir.mkdirs()) error("Cannot create output directory: $path")
             val filters = environment.nodes
                 .filter { it.contains(SimpleMolecule("Filter")) }
                 .filter { hasEstimations(it) }
-
             filters.forEach { filter ->
                 val estimations = filter.getConcentration(
                     SimpleMolecule("Estimations"),
@@ -57,7 +53,8 @@ class ExportEstimations<T>(
                 val id = filter.id
                 estimations.forEach { estimation ->
                     exportToCsv(
-                        "$path/estimations_zebra${estimation.zebraID}_node-${id}_n-${numberOfNeighbors}_errorOnPosition-${errorOnDesiredPosition}_seed-$seed.csv",
+                        "$path/estimations_zebra${estimation.zebraID}_node-${id}_" +
+                            "n-${numberOfNeighbors}_errorOnPosition-${errorOnDesiredPosition}_seed-$seed.csv",
                         "estimatedX,estimatedY",
                         "%.4f,%.4f",
                         estimation.positions.map { Line(it.x, it.y) },
