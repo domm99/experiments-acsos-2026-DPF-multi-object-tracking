@@ -58,6 +58,7 @@ fun Aggregate<Int>.informationFilterAndDistributedMovementEntrypoint(
         device.getOrDefault("FormationSpacing", 0.0),
         device.getOrDefault("SwarmStepSize", DEFAULT_SWARM_STEP_SIZE),
         device.getOrDefault("SwarmWarmupRounds", DEFAULT_SWARM_WARMUP_ROUNDS),
+        device.getOrDefault("ErrorOnDesiredPosition", 0.0)
     )
     val electionBound = (gridValues.rows * gridValues.cols).takeIf { it > 0 } ?: sideLength
     computeDistributedSwarmMovement(gridValues, electionBound, history).also {

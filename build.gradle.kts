@@ -104,7 +104,7 @@ File(rootProject.rootDir.path + "/src/main/yaml")
                         - type: SwingGUI
                           parameters: { graphics: effects/${it.nameWithoutExtension}.json }
                         - type: it.unibo.alchemist.model.monitors.ExportEstimations
-                          parameters: [42, 0, "$dataPath"]
+                          parameters: [42, 0, 0.0, "$dataPath"]
                 """.trimIndent(),
                 "--override",
                 "launcher: { parameters: { batch: [], autoStart: false } }",

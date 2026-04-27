@@ -12,6 +12,7 @@ import it.unibo.collektive.models.ZebraPositionHistory
 import it.unibo.collektive.models.distanceTo
 import it.unibo.collektive.models.hasEnoughHistory
 import it.unibo.collektive.models.latestContribution
+import it.unibo.collektive.models.plus
 import it.unibo.collektive.moveTowards
 import it.unibo.collektive.stdlib.accumulation.convergeSum
 import it.unibo.collektive.stdlib.election.isClosestToTarget
@@ -63,7 +64,9 @@ fun Aggregate<Int>.computeDistributedSwarmMovement(
         return currentPosition
     }
     val desiredPosition = gridDestination(sharedTarget, gridIndex, gridFormationValues)
-    return moveTowards(currentPosition, desiredPosition, gridFormationValues.stepSize)
+    val desiredPositionWithError = desiredPosition
+        .plus(Point(gridFormationValues.errorOnDesiredPosition, gridFormationValues.errorOnDesiredPosition))
+    return moveTowards(currentPosition, desiredPositionWithError, gridFormationValues.stepSize)
 }
 
 /**
@@ -80,6 +83,7 @@ data class GridFormationValues(
     val spacing: Double,
     val stepSize: Double,
     val warmupRounds: Int,
+    val errorOnDesiredPosition: Double,
 )
 
 /**

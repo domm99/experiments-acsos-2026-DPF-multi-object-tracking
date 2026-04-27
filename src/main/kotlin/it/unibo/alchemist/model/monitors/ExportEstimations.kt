@@ -31,7 +31,7 @@ fun <T> hasEstimations(node: Node<T>): Boolean {
  * @property numberOfNeighbors neighborhood size used in output filenames
  * @property path destination directory for generated CSV files
  */
-class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val path: String) :
+class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val errorOnDesiredPosition: Double, val path: String) :
     OutputMonitor<T, Euclidean2DPosition> {
 
     @Suppress("UNCHECKED_CAST")
@@ -53,7 +53,7 @@ class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val pat
                 val id = filter.id
                 estimations.forEach { estimation ->
                     exportToCsv(
-                        "$path/estimations_zebra${estimation.zebraID}_node-${id}_n-${numberOfNeighbors}_seed-$seed.csv",
+                        "$path/estimations_zebra${estimation.zebraID}_node-${id}_n-${numberOfNeighbors}_errorOnPosition-${errorOnDesiredPosition}_seed-$seed.csv",
                         "estimatedX,estimatedY",
                         "%.4f,%.4f",
                         estimation.positions.map { Line(it.x, it.y) },

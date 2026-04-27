@@ -17,9 +17,10 @@ variables:
   swarmWarmupRounds: &swarmWarmupRounds 5
   maxInitialSpeed: &maxInitialSpeed 2.0
   neighboringDistance: &neighboringDistance 250.0
-  numberOfNeighbors: &numberOfNeighbors
+  numberOfNeighbors: &numberOfNeighbors 5
+  errorOnDesiredPosition: &errorOnDesiredPosition
     type: ArbitraryVariable
-    parameters: [ 5, [0, 1, 2, 4, 7] ]
+    parameters: [0.0, [0.0, 50.0, 100.0, 150.0, 200.0, 250.0, 300.0]]
   gridCenterX: &gridCenterX
     type: ArbitraryVariable
     parameters: [0.0 , [0.0] ]
@@ -69,7 +70,7 @@ variables:
       (if (width >= height) width else height).toInt()
   seed: &seed
     min: 0
-    max: 5
+    max: 1
     step: 1
     default: 42
 
@@ -181,19 +182,21 @@ deployments:
         concentration: *swarmStepSize
       - molecule: SwarmWarmupRounds
         concentration: *swarmWarmupRounds
+      - molecule: ErrorOnDesiredPosition
+        concentration: *errorOnDesiredPosition
     programs: [*program, *sensorMovement]
     properties:
       - type: it.unibo.collektive.alchemist.device.sensors.impl.LocationSensorProperty
 
 launcher:
   parameters:
-    batch: [ seed, numberOfNeighbors ]
+    batch: [ seed, errorOnDesiredPosition ]
     showProgress: true
     autoStart: true
 
 monitors:
   - type: it.unibo.alchemist.model.monitors.ExportEstimations
-    parameters: [*seed, *numberOfNeighbors, *dataPath]
+    parameters: [*seed, *numberOfNeighbors, *errorOnDesiredPosition, *dataPath]
 
 terminate:
   type: AfterTime
