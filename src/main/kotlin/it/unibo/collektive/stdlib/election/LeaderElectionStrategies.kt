@@ -1,11 +1,6 @@
-@file:Suppress("UndocumentedPublicFunction") // detekt does not support context parameters,
-// the documentation is present
-
 package it.unibo.collektive.stdlib.election
 
-import it.unibo.alchemist.collektive.device.CollektiveDevice
 import it.unibo.collektive.aggregate.api.Aggregate
-import it.unibo.collektive.aggregate.api.share
 import it.unibo.collektive.alchemist.device.sensors.LocationSensor
 import it.unibo.collektive.centralityWeight
 import it.unibo.collektive.models.Point
@@ -28,28 +23,16 @@ private const val LEADER_TIE_BREAK_SCALE = 1e-9
  * @return `true` if this device is elected as leader, `false` otherwise.
  */
 context(position: LocationSensor)
-fun Aggregate<Int>.isClosestToCentroid(bound: Int): Boolean = leaderClosestToCentroid(bound) == localId
+fun Aggregate<Int>.isClosestToCentroid(bound: Int): Boolean =
+    leaderClosestToPoint(networkCentroid(bound = bound), bound) == localId
 
 /**
  * Elects a leader close to the network centroid, keeping the previous leader
  * while alternative candidates are only marginally closer.
  */
-context(position: LocationSensor, device: CollektiveDevice<*>)
-fun Aggregate<Int>.isClosestToCentroidWithHysteresis(bound: Int, switchMargin: Double): Boolean =
-    leaderClosestToCentroidWithHysteresis(bound, switchMargin) == localId
-
-/**
- * Elects a leader by favoring devices closer to the network centroid and returns its identifier.
- */
 context(position: LocationSensor)
-fun Aggregate<Int>.leaderClosestToCentroid(bound: Int): Int = leaderClosestToPoint(networkCentroid(bound), bound)
-
-/**
- * Elects a leader close to the network centroid and returns the temporally filtered identifier.
- */
-context(position: LocationSensor, device: CollektiveDevice<*>)
-fun Aggregate<Int>.leaderClosestToCentroidWithHysteresis(bound: Int, switchMargin: Double): Int =
-    leaderClosestToPointWithHysteresis(networkCentroid(bound), bound, switchMargin)
+fun Aggregate<Int>.isClosestToCentroidWithHysteresis(bound: Int, switchMargin: Double): Boolean =
+    leaderClosestToPointWithHysteresis(networkCentroid(bound = bound), bound, switchMargin) == localId
 
 /**
  * Elects a leader by favoring devices closer to a target point and returns its identifier.
@@ -58,10 +41,10 @@ fun Aggregate<Int>.leaderClosestToCentroidWithHysteresis(bound: Int, switchMargi
  * same distance from the target, which happens often in symmetric fixed grids.
  */
 context(position: LocationSensor)
-fun Aggregate<Int>.leaderClosestToPoint(target: Point, bound: Int): Int {
-    val dist = position.coordinates().distanceTo(target)
-    val strength = (-dist + localId * LEADER_TIE_BREAK_SCALE)
-    return boundedElection(strength = strength, bound = bound)
+fun Aggregate<Int>.leaderClosestToPoint(target: Point, electionBound: Int): Int {
+    val distance = position.coordinates().distanceTo(target)
+    val strength = (-distance + localId * LEADER_TIE_BREAK_SCALE)
+    return boundedElection(strength = strength, bound = electionBound)
 }
 
 /**
@@ -70,17 +53,13 @@ fun Aggregate<Int>.leaderClosestToPoint(target: Point, bound: Int): Int {
  * The previously accepted leader receives a distance-equivalent bonus, so another node takes over
  * only if it is at least [switchMargin] closer to [target].
  */
-context(position: LocationSensor, device: CollektiveDevice<*>)
+context(position: LocationSensor)
 fun Aggregate<Int>.leaderClosestToPointWithHysteresis(target: Point, bound: Int, switchMargin: Double): Int =
-    share(localId) { previousLeader ->
-        val acceptedLeader = previousLeader.local.value
-        val dist = position.coordinates().distanceTo(target).also { device["dist"] = it }
-        val margin = switchMargin.coerceAtLeast(0.0).also { device["leaderSwitchMargin"] = it }
-        val stickyBonus = if (localId == acceptedLeader) margin else 0.0
-        val strength = (-dist + stickyBonus + localId * LEADER_TIE_BREAK_SCALE).also { device["strength"] = it }
-        val electedLeader = boundedElection(strength = strength, bound = bound).also { device["closest?"] = it }
-        device["previousLeader"] = acceptedLeader
-        electedLeader
+    evolve(localId) { previousLeader ->
+        val distance = position.coordinates().distanceTo(target)
+        val stickyBonus = if (localId == previousLeader) switchMargin.coerceAtLeast(0.0) else 0.0
+        val strength = (-distance + stickyBonus + localId * LEADER_TIE_BREAK_SCALE)
+        boundedElection(strength = strength, bound = bound)
     }
 
 /**
@@ -97,7 +76,9 @@ fun Aggregate<Int>.leaderClosestToPointWithHysteresis(target: Point, bound: Int,
 inline fun <reified ID : Comparable<ID>> Aggregate<ID>.isClosestToTarget(
     distanceToTarget: Double,
     bound: Int,
-): Boolean {
-    val weight = centralityWeight(distanceToTarget, bound / 2.0) // the highest, the closest to the center
-    return boundedElection(strength = weight, bound = bound) == localId
-}
+): Boolean = isLeader(centralityWeight(distanceToTarget, bound / 2.0), bound)
+
+inline fun <reified ID : Comparable<ID>, reified Type : Comparable<Type>> Aggregate<ID>.isLeader(
+    weight: Type,
+    bound: Int,
+) = boundedElection(strength = weight, bound = bound) == localId
