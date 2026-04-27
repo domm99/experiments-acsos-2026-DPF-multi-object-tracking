@@ -88,8 +88,12 @@ class ParticleFilter(
             val predictedY = p.y + (p.vy * dt) + noiseY
             val predictedVx = p.vx + noiseVx
             val predictedVy = p.vy + noiseVy
-            val newX = if (clampParticlesToInitializationArea) predictedX.coerceIn(initialMinX, initialMaxX) else predictedX
-            val newY = if (clampParticlesToInitializationArea) predictedY.coerceIn(initialMinY, initialMaxY) else predictedY
+            val (newX, newY) = when {
+                clampParticlesToInitializationArea -> {
+                    predictedX.coerceIn(initialMinX, initialMaxX) to predictedY.coerceIn(initialMinY, initialMaxY)
+                }
+                else -> predictedX to predictedY
+            }
             val newVx = when {
                 clampParticlesToInitializationArea && newX != predictedX -> 0.0
                 else -> predictedVx
