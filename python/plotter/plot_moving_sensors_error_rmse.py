@@ -185,9 +185,9 @@ def plot_summary(summary, output_dir, x_axis):
             "axes.spines.right": True,
             "axes.spines.top": True,
             "axes.titlesize": 25,
-            "axes.labelsize": 20,
-            "xtick.labelsize": 18,
-            "ytick.labelsize": 18,
+            "axes.labelsize": 25,
+            "xtick.labelsize": 22,
+            "ytick.labelsize": 22,
             "font.family": "DejaVu Sans",
         },
     )
@@ -210,8 +210,8 @@ def plot_summary(summary, output_dir, x_axis):
         x=x_column,
         y="rmse_mean",
         marker="o",
-        markersize=9,
-        linewidth=3,
+        markersize=12,
+        linewidth=5,
         color=color,
         ax=ax,
     )
