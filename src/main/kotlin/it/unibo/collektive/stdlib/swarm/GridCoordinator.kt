@@ -110,4 +110,3 @@ data class GridFormationValues(
     val warmupRounds: Int,
     val errorOnDesiredPosition: Double,
 )
-

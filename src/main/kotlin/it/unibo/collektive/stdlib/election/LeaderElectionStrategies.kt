@@ -28,8 +28,7 @@ private const val LEADER_TIE_BREAK_SCALE = 1e-9
  * @return `true` if this device is elected as leader, `false` otherwise.
  */
 context(position: LocationSensor, device: CollektiveDevice<*>)
-fun Aggregate<Int>.isClosestToCentroid(bound: Int): Boolean =
-    leaderClosestToCentroid(bound) == localId
+fun Aggregate<Int>.isClosestToCentroid(bound: Int): Boolean = leaderClosestToCentroid(bound) == localId
 
 /**
  * Elects a leader close to the network centroid, keeping the previous leader
@@ -43,8 +42,7 @@ fun Aggregate<Int>.isClosestToCentroidWithHysteresis(bound: Int, switchMargin: D
  * Elects a leader by favoring devices closer to the network centroid and returns its identifier.
  */
 context(position: LocationSensor, device: CollektiveDevice<*>)
-fun Aggregate<Int>.leaderClosestToCentroid(bound: Int): Int =
-    leaderClosestToPoint(networkCentroid(bound), bound)
+fun Aggregate<Int>.leaderClosestToCentroid(bound: Int): Int = leaderClosestToPoint(networkCentroid(bound), bound)
 
 /**
  * Elects a leader close to the network centroid and returns the temporally filtered identifier.

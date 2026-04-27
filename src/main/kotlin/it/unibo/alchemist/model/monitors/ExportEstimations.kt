@@ -31,8 +31,12 @@ fun <T> hasEstimations(node: Node<T>): Boolean {
  * @property numberOfNeighbors neighborhood size used in output filenames
  * @property path destination directory for generated CSV files
  */
-class ExportEstimations<T>(val seed: Double, val numberOfNeighbors: Int, val errorOnDesiredPosition: Double, val path: String) :
-    OutputMonitor<T, Euclidean2DPosition> {
+class ExportEstimations<T>(
+    val seed: Double,
+    val numberOfNeighbors: Int,
+    val errorOnDesiredPosition: Double,
+    val path: String,
+) : OutputMonitor<T, Euclidean2DPosition> {
 
     @Suppress("UNCHECKED_CAST")
     override fun finished(environment: Environment<T?, Euclidean2DPosition>, time: Time, step: Long) {

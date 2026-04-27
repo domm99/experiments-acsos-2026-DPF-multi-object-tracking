@@ -52,7 +52,8 @@ fun Aggregate<Int>.entrypointMovingSensorsLeaderBased(device: CollektiveDevice<*
                 device["isLeader"] = it
             }
             val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
-            val history = sensorsExecution(estimations, numberOfParticles, maxInitialSpeed, sideLength.toDouble(), isLeader)
+            val history =
+                sensorsExecution(estimations, numberOfParticles, maxInitialSpeed, sideLength.toDouble(), isLeader)
             device["Estimations"] = history
             computeDistributedSwarmMovement(gridValues, electionBound, history, isLeader).also {
                 device["NextPosition"] = it
@@ -136,4 +137,3 @@ fun Aggregate<Int>.sensorsExecution(
         filter.yielding { estimationsHistory.updateHistory(estimations) }
     }
 }
-
