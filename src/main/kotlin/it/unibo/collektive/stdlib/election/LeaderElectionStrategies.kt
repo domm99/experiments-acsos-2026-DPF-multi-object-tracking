@@ -76,9 +76,9 @@ fun Aggregate<Int>.leaderClosestToPointWithHysteresis(target: Point, bound: Int,
 inline fun <reified ID : Comparable<ID>> Aggregate<ID>.isClosestToTarget(
     distanceToTarget: Double,
     bound: Int,
-): Boolean = isLeader(centralityWeight(distanceToTarget, bound / 2.0), bound)
+): Boolean = isBoundedElectionWinner(centralityWeight(distanceToTarget, bound / 2.0), bound)
 
-inline fun <reified ID : Comparable<ID>, reified Type : Comparable<Type>> Aggregate<ID>.isLeader(
+inline fun <reified ID : Comparable<ID>, reified Type : Comparable<Type>> Aggregate<ID>.isBoundedElectionWinner(
     weight: Type,
     bound: Int,
-) = boundedElection(strength = weight, bound = bound) == localId
+): Boolean = boundedElection(strength = weight, bound = bound) == localId
