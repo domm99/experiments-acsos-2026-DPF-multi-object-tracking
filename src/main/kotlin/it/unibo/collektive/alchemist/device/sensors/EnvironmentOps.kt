@@ -10,6 +10,7 @@ val CollektiveDevice<*>.gridFormationValues: GridFormationValues
         getOrDefault("FormationSpacing", 0.0),
         getOrDefault("SwarmStepSize", DEFAULT_SWARM_STEP_SIZE),
         getOrDefault("SwarmWarmupRounds", DEFAULT_SWARM_WARMUP_ROUNDS),
+        getOrDefault("ErrorOnDesiredPosition", 0.0),
     )
 
 fun CollektiveDevice<*>.gridElectionBound(fallback: Int): Int {
