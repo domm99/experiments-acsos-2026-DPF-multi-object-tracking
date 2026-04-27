@@ -12,7 +12,6 @@ import it.unibo.collektive.alchemist.device.sensors.gridFormationValues
 import it.unibo.collektive.models.DistanceFromPosition
 import it.unibo.collektive.models.ZebraPositionHistory
 import it.unibo.collektive.stdlib.swarm.computeDistributedSwarmMovement
-import it.unibo.filtering.ParticleFilter
 
 /**
  * The entrypoint of the simulation performing local information filtering, without grid movement.
@@ -20,11 +19,10 @@ import it.unibo.filtering.ParticleFilter
 fun Aggregate<Int>.informationFilterEntrypoint(device: CollektiveDevice<*>, position: LocationSensor) =
     context(device, device.randomGenerator, position) {
         val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
+        val filterConfiguration = device.filterConfiguration
         localFiltering(
             estimations,
-            device["NumberOfParticles"],
-            device["MaxInitialSpeed"],
-            device["SideLength"],
+            filterConfiguration,
         ).also { history ->
             device["Estimations"] = history
         }
@@ -42,16 +40,14 @@ fun Aggregate<Int>.informationFilterAndDistributedMovementEntrypoint(
     position: LocationSensor,
 ) = context(device, device.randomGenerator, position) {
     val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
-    val sideLength = device["SideLength"] as Int
+    val filterConfiguration = device.filterConfiguration
     val history = localFiltering(
         estimations,
-        device["NumberOfParticles"],
-        device["MaxInitialSpeed"],
-        sideLength.toDouble(),
+        filterConfiguration,
     )
     device["Estimations"] = history
     val gridValues = device.gridFormationValues
-    val electionBound = (gridValues.rows * gridValues.cols).takeIf { it > 0 } ?: sideLength
+    val electionBound = (gridValues.rows * gridValues.cols).takeIf { it > 0 } ?: filterConfiguration.sideLength
     computeDistributedSwarmMovement(gridValues, electionBound, history).also {
         device["NextPosition"] = it
     }
@@ -62,33 +58,19 @@ fun Aggregate<Int>.informationFilterAndDistributedMovementEntrypoint(
  * Performs local filtering using a Particle Filter to estimate the position
  * of a target based on neighborhood information.
  *
- * @param random the random generator for stochastic processes
+ * @param filterConfiguration particle filter settings read from the simulation environment
  * @param position the location sensor providing target position and neighborhood data
  */
 context(device: CollektiveDevice<*>, position: LocationSensor)
-fun Aggregate<*>.localFiltering(
+internal fun Aggregate<*>.localFiltering(
     estimationsHistory: List<ZebraPositionHistory>,
-    numberOfParticles: Int,
-    maxInitialSpeed: Double,
-    sideLength: Double,
+    filterConfiguration: FilterConfiguration,
 ): List<ZebraPositionHistory> {
     val targets = position.targetsPosition()
-    val initializationArea = device.particleInitializationArea(sideLength)
     return evolving(
-        ParticleFilter(
-            numberOfParticles = numberOfParticles,
-            maxInitialSpeed = maxInitialSpeed,
-            sideLength = sideLength,
-            initialMinX = initializationArea.minX,
-            initialMaxX = initializationArea.maxX,
-            initialMinY = initializationArea.minY,
-            initialMaxY = initializationArea.maxY,
-            clampParticlesToInitializationArea = initializationArea.clampParticles,
-            targetsIDs = targets.map { it.zebraID }.toSet(),
-            random = device.randomGenerator,
-        ),
+        device.createParticleFilter(filterConfiguration, targets.map { it.zebraID }.toSet()),
     ) { filter ->
-        device["NumberOfParticles"] = numberOfParticles
+        device["NumberOfParticles"] = filterConfiguration.numberOfParticles
         val numberOfNeighbors = device.getOrDefault("NumberOfNeighbors", 0)
         val estimations = mutableListOf<ZebraPositionHistory>()
         for (zebra in targets) {
@@ -113,20 +95,26 @@ fun Aggregate<*>.localFiltering(
 
 /**
  * Utility function that returns a list with the updated [ZebraPositionHistory] given the current [estimations].
+ *
+ * Existing zebra histories keep their order, while newly observed zebra ids are appended.
  */
-fun List<ZebraPositionHistory>.updateHistory(
-    estimations: MutableList<ZebraPositionHistory>,
-): List<ZebraPositionHistory> = when {
-    this.isNotEmpty() && estimations.isNotEmpty() -> {
-        this.map { history ->
-            val zebraPos = estimations.find { zebra -> zebra.zebraID == history.zebraID }?.positions
-            when {
-                zebraPos != null -> history.copy(positions = history.positions + zebraPos)
-                else -> history
-            }
-        }
+internal fun List<ZebraPositionHistory>.updateHistory(
+    estimations: List<ZebraPositionHistory>,
+): List<ZebraPositionHistory> {
+    val positionsByZebra = estimations
+        .groupBy { it.zebraID }
+        .mapValues { (_, histories) -> histories.flatMap { it.positions } }
+    if (positionsByZebra.isEmpty()) return this
+    val knownZebraIds = mapTo(mutableSetOf()) { it.zebraID }
+    val updatedHistory = map { history ->
+        positionsByZebra[history.zebraID]?.let { positions ->
+            history.copy(positions = history.positions + positions)
+        } ?: history
     }
-    else -> this + estimations
+    val newHistories = positionsByZebra
+        .filterKeys { it !in knownZebraIds }
+        .map { (zebraID, positions) -> ZebraPositionHistory(zebraID, positions) }
+    return updatedHistory + newHistories
 }
 
 /**
