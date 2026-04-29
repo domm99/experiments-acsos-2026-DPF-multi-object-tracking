@@ -1,9 +1,17 @@
 import pandas as pd
+import matplotlib
+
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pathlib import Path
 import glob
 import re
 from collections import defaultdict
+
+RESOURCE_TRAJECTORY_PATTERN = re.compile(
+    r'(?P<trajectory>zebras-trajectories/flights/[^"\']+/zebra_(?P<zebra>\d+)\.csv)'
+)
+
 
 def read_real_trajectory(path):
     # Skip the Alchemist header and manually assign column names, then drop any NaN rows
@@ -14,6 +22,65 @@ def read_estimation(path):
     # Skip the Alchemist header and manually assign column names, then drop any NaN rows
     df = pd.read_csv(path, skiprows=1, names=['estimatedX', 'estimatedY']).dropna()
     return df
+
+
+def find_experiment_yaml(experiment_name, yaml_base_path):
+    for extension in ('yml', 'yaml'):
+        candidate = Path(yaml_base_path) / f'{experiment_name}.{extension}'
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def extract_zebra_trajectories_from_yaml(yaml_path, resources_base_path):
+    trajectories = {}
+    yaml_content = '\n'.join(
+        line.split('#', maxsplit=1)[0]
+        for line in Path(yaml_path).read_text(encoding='utf-8').splitlines()
+        if not line.lstrip().startswith('#')
+    )
+
+    for match in RESOURCE_TRAJECTORY_PATTERN.finditer(yaml_content):
+        zebra_id = int(match.group('zebra'))
+        resource_path = match.group('trajectory')
+        trajectories[zebra_id] = Path(resources_base_path) / resource_path
+
+    return trajectories
+
+
+def fallback_flight_trajectories(flight_number, resources_base_path):
+    flight_path = Path(resources_base_path) / f'zebras-trajectories/flights/flight_{flight_number}_zebras'
+    return {
+        int(match.group('zebra')): trajectory_path
+        for trajectory_path in sorted(flight_path.glob('zebra_*.csv'))
+        if (match := re.match(r'zebra_(?P<zebra>\d+)\.csv$', trajectory_path.name))
+    }
+
+
+def load_real_trajectory_paths(experiment_name, yaml_base_path, resources_base_path, fallback_flight_number):
+    yaml_path = find_experiment_yaml(experiment_name, yaml_base_path)
+
+    if yaml_path is None:
+        print(
+            f"Warning: YAML for '{experiment_name}' not found in '{yaml_base_path}'. "
+            f"Falling back to flight_{fallback_flight_number}_zebras."
+        )
+        return fallback_flight_trajectories(fallback_flight_number, resources_base_path)
+
+    trajectories = extract_zebra_trajectories_from_yaml(yaml_path, resources_base_path)
+    if not trajectories:
+        print(
+            f"Warning: No zebra trajectories found in '{yaml_path}'. "
+            f"Falling back to flight_{fallback_flight_number}_zebras."
+        )
+        return fallback_flight_trajectories(fallback_flight_number, resources_base_path)
+
+    print(
+        f"Real trajectories from '{yaml_path}': "
+        f"{', '.join(f'Zebra {zid} -> {path}' for zid, path in sorted(trajectories.items()))}"
+    )
+    return trajectories
+
 
 def generate_charts(plot_configs, charts_path):
 
@@ -168,14 +235,15 @@ if __name__ == '__main__':
     # ---------------------------------------------------------
     # QUICK CONFIGURATION AREA
     # ---------------------------------------------------------
-    flight_number = 1
+    fallback_flight_number = 1
 
     # Define the list of experiment names. These must match the subfolder names inside "data/"
     experiments = ['fixedSensorsNB', 'fixedSensorsLB', 'movingSensorsNB', 'movingSensorsLB']
 
     base_charts_path = 'charts'
     base_data_path = 'data'
-    real_base_path = f'src/main/resources/zebras-trajectories/flights/flight_{flight_number}_zebras'
+    yaml_base_path = 'src/main/yaml'
+    resources_base_path = 'src/main/resources'
     # ---------------------------------------------------------
 
     # Setup regex to extract parameters from filenames
@@ -192,6 +260,12 @@ if __name__ == '__main__':
 
         # Check if this experiment is Leader Based (LB) or Neighbor Based (NB)
         is_lb_experiment = current_experiment.endswith('LB')
+        real_trajectory_paths = load_real_trajectory_paths(
+            current_experiment,
+            yaml_base_path,
+            resources_base_path,
+            fallback_flight_number,
+        )
 
         # Dynamically define paths for the current experiment
         exp_data_path = f'{base_data_path}/{current_experiment}'
@@ -240,6 +314,8 @@ if __name__ == '__main__':
         # Re-organize configurations by (n, error_on_position) so we can plot
         # multiple zebras together without mixing different position errors.
         scenarios = defaultdict(list)
+        warned_missing_real_trajectories = set()
+        warned_missing_real_files = set()
 
         for (zid, n, error_on_position), files in grouped_files.items():
             dfs = []
@@ -254,14 +330,19 @@ if __name__ == '__main__':
                 print(f"Warning: Could not aggregate estimations for Zebra {zid}. Moving to next.")
                 continue
 
-            # Load the real trajectory (handling the padding with zeros like zebra_035.csv)
-            z_str = str(zid).zfill(3)
-            real_path = f'{real_base_path}/zebra_{z_str}.csv'
+            real_path = real_trajectory_paths.get(zid)
+            if real_path is None:
+                if zid not in warned_missing_real_trajectories:
+                    print(f"Warning: Zebra {zid} is not defined in the YAML trajectories. Skipping it.")
+                    warned_missing_real_trajectories.add(zid)
+                continue
 
             try:
                 df_real = read_real_trajectory(real_path)
             except FileNotFoundError:
-                print(f"Warning: Real trajectory not found at '{real_path}'. Skipping Zebra {zid}.")
+                if real_path not in warned_missing_real_files:
+                    print(f"Warning: Real trajectory not found at '{real_path}'. Skipping Zebra {zid}.")
+                    warned_missing_real_files.add(real_path)
                 continue
 
             entity = {
