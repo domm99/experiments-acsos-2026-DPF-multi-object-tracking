@@ -15,17 +15,24 @@ import it.unibo.alchemist.model.positions.Euclidean2DPosition
  * @property numberOfNeighbors neighborhood size used in output filenames
  * @property dataPath destination directory for generated CSV files
  */
-class ExportLeadersList<T>(val seed: Double, val numberOfNeighbors: Int, val dataPath: String) :
+class ExportLeadersList<T>(val seed: Double, val dataPath: String) :
     OutputMonitor<T, Euclidean2DPosition> {
 
     override fun finished(environment: Environment<T?, Euclidean2DPosition>, time: Time, step: Long) {
-        val leader = environment.nodes
-            .first { it.getConcentration(SimpleMolecule("isLeader")) as Boolean }
-        exportToCsv(
-            "$dataPath/leader_n-${numberOfNeighbors}_seed-$seed.csv",
-            "leader",
-            "%d",
-            listOf(Line(12), Line(leader.id)),
-        )
+
+        try {
+            val leaders = environment.nodes
+                .filter { it.contains(SimpleMolecule("isLeader"))  }
+
+            exportToCsv(
+                "$dataPath/leader_seed-$seed.csv",
+                "leader",
+                "%d",
+                leaders.map { Line(it.id) },
+            )
+        } catch (e: Exception) {
+            print(e.toString())
+        }
+
     }
 }

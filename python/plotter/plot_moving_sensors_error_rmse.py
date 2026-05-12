@@ -216,6 +216,17 @@ def plot_summary(summary, output_dir, x_axis):
         ax=ax,
     )
 
+    ax.errorbar(
+        summary[x_column],
+        summary["rmse_mean"],
+        yerr=np.sqrt(summary["rmse_variance"]),
+        fmt="none",
+        ecolor=color,
+        elinewidth=2,
+        capsize=5,
+        alpha=0.8,
+    )
+
     ax.set_title("", pad=16, weight="bold")
     ax.set_xlabel(x_label)
     ax.set_ylabel("RMSE (m)")

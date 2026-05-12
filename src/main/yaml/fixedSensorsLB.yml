@@ -65,7 +65,7 @@ variables:
       maxOf(width, height).toInt()
   seed: &seed
     min: 0
-    max: 5
+    max: 0
     step: 1
     default: 42
 
@@ -175,7 +175,9 @@ launcher:
 
 monitors:
   - type: it.unibo.alchemist.model.monitors.ExportEstimations
-    parameters: [*seed, *numberOfNeighbors, *dataPath]
+    parameters: [*seed, *numberOfNeighbors, 0.0, *dataPath]
+  - type: it.unibo.alchemist.model.monitors.ExportLeadersList
+    parameters: [ *seed, *dataPath ]
 
 terminate:
   type: AfterTime

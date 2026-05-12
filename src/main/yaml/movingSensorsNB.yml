@@ -17,10 +17,12 @@ variables:
   swarmWarmupRounds: &swarmWarmupRounds 5
   maxInitialSpeed: &maxInitialSpeed 2.0
   neighboringDistance: &neighboringDistance 250.0
-  numberOfNeighbors: &numberOfNeighbors 5
+  numberOfNeighbors: &numberOfNeighbors
+    type: ArbitraryVariable
+    parameters: [0 , [0, 1, 4, 7] ]
   errorOnDesiredPosition: &errorOnDesiredPosition
     type: ArbitraryVariable
-    parameters: [0.0, [0.0, 50.0, 100.0, 150.0, 200.0, 250.0, 300.0]]
+    parameters: [0.0 , [0.0] ]
   gridCenterX: &gridCenterX
     type: ArbitraryVariable
     parameters: [0.0 , [0.0] ]
@@ -61,7 +63,7 @@ variables:
       gridCenterY as Double + (size as Int) / 2.0
   gridJitterX: &gridJitterX 0
   gridJitterY: &gridJitterY 0
-  dataPath: &dataPath "data/movingSensorsNB/"
+  dataPath: &dataPath "data/movingSensorsNB-batchOnNeighbors/"
   size: &size
     language: kotlin
     formula: |
@@ -70,7 +72,7 @@ variables:
       (if (width >= height) width else height).toInt()
   seed: &seed
     min: 0
-    max: 1
+    max: 50
     step: 1
     default: 42
 
@@ -188,7 +190,7 @@ deployments:
 
 launcher:
   parameters:
-    batch: [ seed, errorOnDesiredPosition ]
+    batch: [ seed, numberOfNeighbors ]
     showProgress: true
     autoStart: true
 

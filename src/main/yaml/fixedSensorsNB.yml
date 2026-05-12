@@ -71,7 +71,7 @@ variables:
       (if (width >= height) width else height).toInt()
   seed: &seed
     min: 0
-    max: 5
+    max: 50
     step: 1
     default: 42
 
@@ -165,6 +165,8 @@ deployments:
         concentration: *numberOfNeighbors
       - molecule: isDown
         concentration: false
+      - molecule: ErrorOnDesiredPosition
+        concentration: 0.0
     programs: [ *program ]
     properties:
       - type: it.unibo.collektive.alchemist.device.sensors.impl.LocationSensorProperty
@@ -177,7 +179,7 @@ launcher:
 
 monitors:
   - type: it.unibo.alchemist.model.monitors.ExportEstimations
-    parameters: [*seed, *numberOfNeighbors, *dataPath]
+    parameters: [*seed, *numberOfNeighbors, 0.0, *dataPath]
 
 terminate:
   type: AfterTime

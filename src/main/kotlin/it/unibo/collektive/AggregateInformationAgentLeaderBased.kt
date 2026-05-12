@@ -33,7 +33,10 @@ fun Aggregate<Int>.informationFilterEntrypointLeaderBased(device: CollektiveDevi
             val filterConfiguration = device.filterConfiguration
             val electionBound = device.gridElectionBound(filterConfiguration.sideLength)
             val isLeader = isClosestToCentroid(electionBound)
-            device["isLeader"] = isLeader
+           // if(isLeader){
+                device["isLeader"] = isLeader
+            //}
+
             val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
             val history = sensorsExecution(estimations, filterConfiguration, isLeader)
             device["Estimations"] = history
