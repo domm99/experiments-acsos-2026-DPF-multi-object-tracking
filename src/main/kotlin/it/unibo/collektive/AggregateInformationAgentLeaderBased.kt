@@ -43,36 +43,6 @@ fun Aggregate<Int>.informationFilterEntrypointLeaderBased(device: CollektiveDevi
     }
 
 /**
- * Runs leader-based filtering and computes the next movement step for active sensors.
- *
- * The elected leader uses hysteresis to avoid frequent leadership changes. Each active sensor stores
- * its updated estimation history in `Estimations` and its planned movement in `NextPosition`.
- *
- * @param device Collektive device used to read simulation parameters and persist output molecules.
- * @param position Location sensor used to observe local and target positions.
- */
-fun Aggregate<Int>.entrypointMovingSensorsLeaderBased(device: CollektiveDevice<*>, position: LocationSensor) =
-    context(device, device.randomGenerator, position) {
-        val isDown = device["isDown"] as Boolean
-        if (!isDown) {
-            val filterConfiguration = device.filterConfiguration
-            val gridValues = device.gridFormationValues
-            val electionBound = (gridValues.rows * gridValues.cols).takeIf { it > 0 } ?: filterConfiguration.sideLength
-            val switchMargin = device.leaderSwitchMargin(gridValues.spacing)
-            val isLeader = isClosestToCentroidWithHysteresis(electionBound, switchMargin)
-            device["isLeader"] = isLeader
-            val estimations = device.getOrDefault("Estimations", emptyList<ZebraPositionHistory>())
-            val history = sensorsExecution(estimations, filterConfiguration, isLeader)
-            device["Estimations"] = history
-            val nextPosition = computeDistributedSwarmMovement(gridValues, electionBound, history, isLeader)
-            device["NextPosition"] = nextPosition
-        } else {
-            device["isLeader"] = false
-            device["NextPosition"] = position.selfPosition()
-        }
-    }
-
-/**
  * Runs one sensing/filtering round and returns updated zebra estimation histories.
  * 1. Read currently visible target positions and local position;
  * 2. Elect a leader;
