@@ -22,7 +22,7 @@ services:
     volumes:
       - ./data:/experiment/data
     environment:
-      - MAX_SEED=1
+      - MAX_SEED=50
       - GRADLE_TASK=runFixedSensorsLBBatch
 
   fixed-sensors-neighbors-based:
@@ -36,7 +36,7 @@ services:
     volumes:
       - ./data:/experiment/data
     environment:
-      - MAX_SEED=1
+      - MAX_SEED=50
       - GRADLE_TASK=runFixedSensorsNBBatch
 
   moving-sensors-neighbors-based:
@@ -50,7 +50,7 @@ services:
     volumes:
       - ./data:/experiment/data
     environment:
-      - MAX_SEED=1
+      - MAX_SEED=50
       - GRADLE_TASK=runMovingSensorsNBBatch
 
   charts:
