@@ -1,4 +1,4 @@
-# TODO TITLE
+# Multi-Target Tracking via Field-Based Distributed Particle Filtering
 
 This artifact is associated with the regular paper article submitted in the Main Track of the ACSOS 2026 conference.
 
@@ -33,7 +33,18 @@ Alma Mater Studiorum --- Università di Bologna - Cesena, Italy*
 
 ## About
 
-TODO ABSTRACT
+Ensuring mission success for multi-robot systems operating in unpredictable environments requires robust mechanisms to react to unpredictable events, 
+such as robot failures, by adapting plans in real-time.
+Adaptive mechanisms are especially needed for large teams deployed in areas with unreliable network infrastructure, 
+for which centralized control is impractical and where network segmentation is frequent.
+This paper advances the state of the art by proposing a field-based runtime task replanning approach grounded in aggregate programming.
+Through this paradigm,
+the mission and the environment are represented by continuously evolving fields,
+enabling robots to make decentralized decisions and collectively adapt the ongoing plan.
+We compare our approach with a simple late-stage replanning strategy and an oracle centralized continuous replanner.
+We provide experimental evidence that the proposed approach achieves performance close to the oracle if the communication range is sufficient,
+while significantly outperforming the baseline even under sparse communication.
+Additionally, we show that the approach can scale well with the number of robots.
 
 ### Experiments
 
