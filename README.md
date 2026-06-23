@@ -3,21 +3,13 @@
 This artifact is associated with the regular paper article submitted in the Main Track of the ACSOS 2026 conference.
 
 ### Authors
-Anonimized for double-blind review.
 
-[//]: # ()
-[//]: # (| **Angela Cortecchia** &#40;*&#41;  | **Davide Domini** &#40;*&#41;  | **Giovanni Ciatto**&#40;*&#41;   | **Roberto Casadei**&#40;*&#41; | **Mirko Viroli** &#40;*&#41;  |)
-
-[//]: # (|:--------------------------:|:----------------------:|--------------------------|------------------------|:---------------------:|)
-
-[//]: # (| angela.cortecchia@unibo.it | davide.domini@unibo.it | giovanni.ciatto@unibo.it | roby.casadei@unibo.it  | mirko.viroli@unibo.it |)
-
-[//]: # ()
-[//]: # (&#40;*&#41;)
-
-[//]: # (*Department of Computer Science and Engineering )
-
-[//]: # (Alma Mater Studiorum --- Università di Bologna - Cesena, Italy*)
+| **Angela Cortecchia** (*)  | **Davide Domini** (*)  | **Giovanni Ciatto**(*)   | **Roberto Casadei**(*) | **Mirko Viroli** (*)  |
+|:--------------------------:|:----------------------:|--------------------------|------------------------|:---------------------:|
+| angela.cortecchia@unibo.it | davide.domini@unibo.it | giovanni.ciatto@unibo.it | roby.casadei@unibo.it  | mirko.viroli@unibo.it |
+(*)
+*Department of Computer Science and Engineering 
+Alma Mater Studiorum --- Università di Bologna - Cesena, Italy*
 
 ### Table of Contents
 - [About](#about)
