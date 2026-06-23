@@ -65,7 +65,7 @@ variables:
       maxOf(width, height).toInt()
   seed: &seed
     min: 0
-    max: 0
+    max: 100
     step: 1
     default: 42
 

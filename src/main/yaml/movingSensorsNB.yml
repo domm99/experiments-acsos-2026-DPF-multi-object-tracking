@@ -72,7 +72,7 @@ variables:
       (if (width >= height) width else height).toInt()
   seed: &seed
     min: 0
-    max: 50
+    max: 100
     step: 1
     default: 42
 
