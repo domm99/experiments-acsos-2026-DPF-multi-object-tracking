@@ -69,9 +69,12 @@ variables:
       val width = kotlin.math.abs((gridEndX as Double) - (gridStartX as Double))
       val height = kotlin.math.abs((gridEndY as Double) - (gridStartY as Double))
       (if (width >= height) width else height).toInt()
+  maxSeed: &maxSeed
+    type: SystemEnvVariable
+    parameters: [ "MAX_SEED", 50 ]
   seed: &seed
     min: 0
-    max: 100
+    max: *maxSeed
     step: 1
     default: 42
 
