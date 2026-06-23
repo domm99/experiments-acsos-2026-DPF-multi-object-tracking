@@ -69,7 +69,7 @@ class ParticleFilter(
      * @param sampleID Target/sample identifier.
      * @return The particles currently associated with `sampleID`, or a freshly initialized set.
      */
-    fun getAll(sampleID: Int): List<Particle> = particlesFor[sampleID] ?: initParticles()
+    fun getAll(sampleID: Int): List<Particle> = particlesFor.getOrPut(sampleID) { initParticles() }
 
     /**
      * Predicts the new state of the particles based on a simple motion model with added Gaussian noise.
