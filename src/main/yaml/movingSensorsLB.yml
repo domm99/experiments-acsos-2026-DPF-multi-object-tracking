@@ -194,13 +194,13 @@ deployments:
 
 launcher:
   parameters:
-    batch: [ seed, numberOfNeighbors ]
+    batch: [ seed ]
     showProgress: true
     autoStart: true
 
 monitors:
   - type: it.unibo.alchemist.model.monitors.ExportEstimations
-    parameters: [*seed, *numberOfNeighbors, *dataPath]
+    parameters: [*seed, *numberOfNeighbors, 0.0, *dataPath]
 
 terminate:
   type: AfterTime
