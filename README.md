@@ -7,6 +7,7 @@ This artifact is associated with the regular paper article submitted in the Main
 | **Angela Cortecchia** (*)  | **Davide Domini** (*)  | **Giovanni Ciatto**(*)   | **Roberto Casadei**(*) | **Mirko Viroli** (*)  |
 |:--------------------------:|:----------------------:|--------------------------|------------------------|:---------------------:|
 | angela.cortecchia@unibo.it | davide.domini@unibo.it | giovanni.ciatto@unibo.it | roby.casadei@unibo.it  | mirko.viroli@unibo.it |
+
 (*)
 *Department of Computer Science and Engineering 
 Alma Mater Studiorum --- Università di Bologna - Cesena, Italy*
