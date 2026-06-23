@@ -19,7 +19,7 @@ variables:
   neighboringDistance: &neighboringDistance 250.0
   numberOfNeighbors: &numberOfNeighbors
     type: ArbitraryVariable
-    parameters: [0 , [0, 1, 4, 7] ]
+    parameters: [7 , [0, 1, 4, 7] ]
   errorOnDesiredPosition: &errorOnDesiredPosition
     type: ArbitraryVariable
     parameters: [0.0 , [0.0] ]
