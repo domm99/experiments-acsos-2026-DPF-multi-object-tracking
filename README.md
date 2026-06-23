@@ -46,6 +46,8 @@ We provide experimental evidence that the proposed approach achieves performance
 while significantly outperforming the baseline even under sparse communication.
 Additionally, we show that the approach can scale well with the number of robots.
 
+![dpf](images/dpf.gif)
+
 ### Experiments
 
 The repository currently contains three main experiment configurations and two smaller support scenarios:
@@ -110,7 +112,58 @@ The important difference between the main configurations is how information is c
 
 ### Walk-through the experiments
 
-TODO
+This section provides a brief overview of the tracking experiments currently available in the repository.
+All scenarios replay the same three zebra trajectories,
+namely `zebra_035.csv`, `zebra_037.csv`, and `zebra_038.csv`,
+and deploy a `4 x 6` grid of filter nodes using `250` particles per tracked target.
+The simulations last `1400s` (corresponding to the amount of time needed to replay the zebra trajectories),
+and each sensor estimates the zebra positions through the distributed particle filter implemented in this project.
+
+The main scenarios are:
+- _fixedSensorsNB_: sensors are deployed once and remain fixed.
+  Each sensor performs its own particle-filter update by using its local measurement plus the closest `numberOfNeighbors` sensors.
+  Batch executions sweep `numberOfNeighbors` over `[0, 1, 2, 4, 7]`;
+- _fixedSensorsLB_: sensors remain fixed,
+  but measurements are collected toward an elected leader.
+  The leader performs the particle-filter update and exports the estimated trajectories.
+  The experiment also kills the current leader at `700s` to observe how the system reacts to a leader failure;
+- _movingSensorsNB_: sensors start as a grid and then move as a swarm around the estimated zebra centroid.
+  Filtering remains neighbor-based,
+  and batch executions sweep `numberOfNeighbors` over `[0, 1, 4, 7]`.
+
+The detailed instructions to reproduce the experiment are in the section
+"[Reproduce the entire experiment](#reproduce-the-entire-experiment)".
+
+A graphical simulation can be launched from a Unix terminal with one of the following commands:
+
+```bash
+./gradlew runFixedSensorsNBGraphic
+./gradlew runFixedSensorsLBGraphic
+./gradlew runMovingSensorsNBGraphic
+```
+
+or through the scripts in the section
+"[Extremely quick-start](#extremely-quick-start-of-a-basic-experiment----bazfish-users-only)".
+Note that `MAX_SEED` is relevant only for batch executions,
+and it is therefore unnecessary for graphical runs.
+
+Once the simulation has started, the Alchemist GUI will open.
+After Alchemist finishes loading,
+you will see the zebra nodes (blue squares) following the replayed trajectories and the filter nodes deployed according to the selected scenario.
+In fixed-sensor experiments, the filter grid stays in place while the zebras move through the monitored area.
+In moving-sensor experiments, the grid progressively follows the estimated target centroid.
+In the leader-based experiment, the elected leader is the node responsible for running the centralized update step;
+after the configured leader failure, the remaining active sensors elect a new leader and continue the computation.
+
+The nodes may be initially hidden depending on the monitor resolution and the default zoom level of the GUI,
+but they are present in the simulation.
+It is usually sufficient to zoom out or move around the environment to see the whole setup.
+To move around the environment, use the mouse to drag the view and the scroll wheel to zoom in and out.
+To start, pause, and resume the simulation, press the <kbd>P</kbd> key.
+If you want to execute it at "real time" speed,
+press the <kbd>R</kbd> key, and press it again to return to the default speed.
+For more GUI features, please refer to the
+[Simulation Graphical Interface](#simulation-graphical-interface) section.
 
 ### Reproduce the entire experiment
 
@@ -232,12 +285,43 @@ experiments-acsos-2026-DPF-multi-object-tracking/
 
 #### Simulation entrypoint
 
-The main aggregate entrypoints used right now are:
+The aggregate entrypoints for the experiments are located in the `it.unibo.collektive` package,
+mainly in `AggregateInformationAgent.kt` and `AggregateInformationAgentLeaderBased.kt`.
+Each YAML file declares the function called by Alchemist through `RunCollektiveProgram`.
+That function is executed periodically by every filter node and is responsible for reading the local simulation molecules,
+running the Collektive aggregate computation,
+and storing the updated output molecules such as `Estimations`, `Particles<zebraID>`, `isLeader`, and `NextPosition`.
 
-- `it.unibo.collektive.AggregateInformationAgentKt.informationFilterEntrypoint`
-- `it.unibo.collektive.AggregateInformationAgentLeaderBasedKt.informationFilterEntrypointLeaderBased`
+The entrypoints used by the current scenarios are:
+- _fixedSensorsNB_:
+  `it.unibo.collektive.AggregateInformationAgentKt.informationFilterEntrypoint`.
+  Each node reads the visible zebra positions,
+  samples a noisy local measurement,
+  selects its closest neighbors according to `NumberOfNeighbors`,
+  and updates its local particle filter independently;
+- _movingSensorsNB_:
+  `it.unibo.collektive.AggregateInformationAgentKt.informationFilterAndDistributedMovementEntrypoint`.
+  This performs the same neighbor-based filtering step,
+  then computes the next sensor position through the distributed swarm movement logic and stores it in `NextPosition`;
+- _fixedSensorsLB_:
+  `it.unibo.collektive.AggregateInformationAgentLeaderBasedKt.informationFilterEntrypointLeaderBased`.
+  Active sensors elect the node closest to the grid centroid as leader,
+  aggregate measurements toward it with `convergeCast`,
+  and let only the leader perform the particle-filter update.
 
-TODO
+The shared filtering logic is implemented by `ParticleFilter.kt`.
+For each zebra id,
+the filter keeps a persistent particle population,
+executes the standard cycle `resample -> predict -> update -> estimate`,
+and appends the resulting positions to the `Estimations` history.
+The `ExportEstimations` monitor then writes those histories under the `data/` folder,
+using the path configured in the corresponding YAML file.
+
+The moving-sensor scenario also runs the `MoveSensorsInSwarm` Alchemist action.
+This action reads the `NextPosition` molecule computed by the aggregate program and moves each sensor node accordingly.
+The leader-based scenario additionally uses the `isDown` and `isLeader` molecules:
+`KillLeader` marks the current leader as down at the configured simulation time,
+and the aggregate program excludes down sensors from the following rounds.
 
 ### Reproduce the experiment results
 
