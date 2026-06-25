@@ -2,8 +2,8 @@ FROM python:3.14.0
 RUN mkdir /experiment
 WORKDIR /experiment
 COPY .python-version ./
-COPY python/plotter/plot_gemini_goes_brrr.py ./
+COPY python/plotter/plot_trajectoryr.py ./
 COPY requirements.txt ./
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
-CMD python python/plotter/plot_gemini_goes_brrr.py
+CMD python python/plotter/plot_trajectoryr.py
