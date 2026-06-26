@@ -15,7 +15,7 @@ variables:
   neighboringDistance: &neighboringDistance 250.0
   numberOfNeighbors: &numberOfNeighbors
     type: ArbitraryVariable
-    parameters: [ 5, [0, 1, 2, 4, 7] ]
+    parameters: [ 5, [0, 1, 4, 7] ]
   # For fixed sensors we keep the grid horizontally centered and anchor the
   # lower long side close to the movables' starting axis.
   gridCenterX: &gridCenterX
@@ -71,7 +71,7 @@ variables:
       (if (width >= height) width else height).toInt()
   maxSeed: &maxSeed
     type: SystemEnvVariable
-    parameters: [ "MAX_SEED", 50 ]
+    parameters: [ "MAX_SEED", 1 ]
   seed: &seed
     min: 0
     max: *maxSeed
