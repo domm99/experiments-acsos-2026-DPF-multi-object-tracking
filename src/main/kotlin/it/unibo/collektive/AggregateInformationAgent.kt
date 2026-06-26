@@ -11,6 +11,7 @@ import it.unibo.collektive.alchemist.device.sensors.LocationSensor
 import it.unibo.collektive.alchemist.device.sensors.gridFormationValues
 import it.unibo.collektive.models.DistanceFromPosition
 import it.unibo.collektive.models.ZebraPositionHistory
+import it.unibo.collektive.models.Point
 import it.unibo.collektive.stdlib.swarm.computeDistributedSwarmMovement
 
 /**
@@ -56,6 +57,15 @@ fun Aggregate<Int>.informationFilterAndDistributedMovementEntrypoint(
         filterConfiguration,
     )
     device["Estimations"] = history
+
+
+    val positions = device.getOrDefault("Positions", emptyList<Point>())
+
+    val currentPosition = position.selfPosition()
+    val newPositions = positions + listOf(currentPosition)
+    device["Positions"] = newPositions
+
+
     val gridValues = device.gridFormationValues
     val electionBound = (gridValues.rows * gridValues.cols).takeIf { it > 0 } ?: filterConfiguration.sideLength
     val nextPosition = computeDistributedSwarmMovement(gridValues, electionBound, history)

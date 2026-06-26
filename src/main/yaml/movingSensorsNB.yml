@@ -19,10 +19,10 @@ variables:
   neighboringDistance: &neighboringDistance 250.0
   numberOfNeighbors: &numberOfNeighbors
     type: ArbitraryVariable
-    parameters: [7 , [0, 1, 4, 7] ]
+    parameters: [7 , [7] ]
   errorOnDesiredPosition: &errorOnDesiredPosition
     type: ArbitraryVariable
-    parameters: [0.0 , [0.0] ]
+    parameters: [0.0 , [0.0, 50.0, 100.0, 150.0, 200.0, 250.0, 300.0] ]
   gridCenterX: &gridCenterX
     type: ArbitraryVariable
     parameters: [0.0 , [0.0] ]
@@ -63,7 +63,7 @@ variables:
       gridCenterY as Double + (size as Int) / 2.0
   gridJitterX: &gridJitterX 0
   gridJitterY: &gridJitterY 0
-  dataPath: &dataPath "data/movingSensorsNB-batchOnNeighbors/"
+  dataPath: &dataPath "data/movingSensorsNB/"
   size: &size
     language: kotlin
     formula: |
@@ -72,7 +72,7 @@ variables:
       (if (width >= height) width else height).toInt()
   maxSeed: &maxSeed
     type: SystemEnvVariable
-    parameters: [ "MAX_SEED", 50 ]
+    parameters: [ "MAX_SEED", 0 ]
   seed: &seed
     min: 0
     max: *maxSeed
@@ -192,13 +192,15 @@ deployments:
 
 launcher:
   parameters:
-    batch: [ seed, numberOfNeighbors ]
+    batch: [ seed, errorOnDesiredPosition ]
     showProgress: true
     autoStart: true
 
 monitors:
   - type: it.unibo.alchemist.model.monitors.ExportEstimations
     parameters: [*seed, *numberOfNeighbors, *errorOnDesiredPosition, *dataPath]
+  - type: it.unibo.alchemist.model.monitors.ExportSensorsPositions
+    parameters: [ *dataPath ]
 
 terminate:
   type: AfterTime
