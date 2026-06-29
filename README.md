@@ -372,12 +372,14 @@ For the current project status, result reproduction means:
     ```
 3. Install the required Python packages by running:
     ```bash
+    python3 -m venv env
+    source env/bin/activate
     pip install --upgrade pip
     pip install -r requirements.txt
     ```
 4. Run the script to process the data and generate the charts (this process may take some time):
     ```bash
-    python plot.py TODO FIX THIS
+    python python/plotter/plot-aggregated-h-comparison.py && python python/plotter/plot-rmse.py && python python/plotter/plot_moving_sensors_error_rmse.py && python python/plotter/plot_sensors_zebras_movement.py && python python/plotter/plot_leader_kill.py
     ```
 5. The charts will be generated in the `charts` folder.
 6. If you want to regenerate the charts, you can run the script again.
