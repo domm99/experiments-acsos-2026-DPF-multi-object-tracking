@@ -1,3 +1,17 @@
+## [1.1.1](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/compare/1.1.0...1.1.1) (2026-06-29)
+
+### Bug Fixes
+
+* copy real trajectories and update plotter commands ([4f5d15b](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/4f5d15b300ef3bf5046604eefddfcc777bb7baca))
+* execute containers sequentially due to excessive ram needed ([35d5a41](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/35d5a417afa3a76acb6165c0496ce00bfaafee42))
+* remove prints ([fcbfacd](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/fcbfacde690e21cb4122edf7e6128bf7e43c7a74))
+* update charts command in readme ([73c3bf9](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/73c3bf990252219fc9705fe967dcde972a1c192f))
+
+### General maintenance
+
+* **artifact:** fix docker image for charts ([c5779d9](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/c5779d9fde19f60b5900926200857c5c2390daa8))
+* **release:** update gradle.properties .env versions to 1.1.0 [skip ci] ([fe28be9](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/fe28be9eb18b2eec9420948f7fb17c4cfff55344))
+
 ## [1.1.0](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/compare/1.0.1...1.1.0) (2026-06-29)
 
 ### Features
