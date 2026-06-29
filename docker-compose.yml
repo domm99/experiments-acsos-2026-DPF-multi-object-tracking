@@ -27,7 +27,7 @@ services:
 
   fixed-sensors-neighbors-based:
     depends_on:
-      prepare:
+      fixed-sensors-leader-based:
         condition: service_completed_successfully
     image: angelacortecchia/${PROJECT_NAME:-unknown}-fixed-sensor-neighbors-based:${VERSION:-latest}
     build:
@@ -41,7 +41,7 @@ services:
 
   moving-sensors-neighbors-based:
     depends_on:
-      prepare:
+      fixed-sensors-neighbors-based:
         condition: service_completed_successfully
     image: angelacortecchia/${PROJECT_NAME:-unknown}-moving-sensor-neighbors-based:${VERSION:-latest}
     build:
