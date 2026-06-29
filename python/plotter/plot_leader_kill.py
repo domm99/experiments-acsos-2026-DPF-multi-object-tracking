@@ -345,7 +345,6 @@ def main() -> None:
         )
         if item.original_real_length != len(item.estimated):
             print(
-                f"  warning: real and estimated lengths differ by "
                 f"{item.original_real_length - len(item.estimated)} points"
             )
 
