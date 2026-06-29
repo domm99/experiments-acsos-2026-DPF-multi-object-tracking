@@ -6,4 +6,4 @@ COPY python/plotter/plot_trajectory.py ./
 COPY requirements.txt ./
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
-CMD python python/plotter/plot_trajectory.py
+CMD sh -c "python plot-aggregated-h-comparison.py && python plot-rmse.py && python plot_moving_sensors_error_rmse.py && plot_sensors_zebras_movement.py && python plot_leader_kill.py"
