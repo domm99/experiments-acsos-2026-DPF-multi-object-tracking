@@ -65,7 +65,7 @@ variables:
       maxOf(width, height).toInt()
   maxSeed: &maxSeed
     type: SystemEnvVariable
-    parameters: [ "MAX_SEED", 50 ]
+    parameters: [ "MAX_SEED", 0 ]
   seed: &seed
     min: 0
     max: *maxSeed
