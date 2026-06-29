@@ -8,8 +8,13 @@ import it.unibo.alchemist.model.positions.Euclidean2DPosition
 import it.unibo.collektive.models.Point
 import kotlin.collections.forEach
 
-class ExportSensorsPositions<T>(val dataPath: String) :
-    OutputMonitor<T, Euclidean2DPosition>  {
+/**
+ * Exports the estimated positions stored by filter nodes at the end of the simulation.
+ *
+ * @param T concentration type used by the simulation.
+ * @property dataPath directory where the CSV files will be written.
+ */
+class ExportSensorsPositions<T>(val dataPath: String) : OutputMonitor<T, Euclidean2DPosition> {
 
     override fun finished(environment: Environment<T?, Euclidean2DPosition>, time: Time, step: Long) {
         val filters = environment.nodes
@@ -28,8 +33,6 @@ class ExportSensorsPositions<T>(val dataPath: String) :
                 "%.4f,%.4f",
                 estimations.map { Line(it.x, it.y) },
             )
-
         }
     }
-
 }
