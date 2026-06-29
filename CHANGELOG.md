@@ -1,3 +1,113 @@
+## [1.1.0](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/compare/1.0.1...1.1.0) (2026-06-29)
+
+### Features
+
+* add CentroidAccumulator and utility functions for centroid calculations ([e85f43f](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/e85f43f7e432c6dafb5c392ab56fb6a90327429f))
+* add currentFiltersCentroid and filterIndexOf functions ([9ae5ca1](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/9ae5ca15efa28448db0c81e31446b09b7a19d7c3))
+* add description in readme ([863aa62](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/863aa62ab6f4afc76ca3a7616f5d4066d94c496b))
+* add entrypoint for moving simulation with leader election particle aggregation ([ac0716b](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/ac0716b9a3fc23aff0f6a9d321d247b3308f3607))
+* add error on tracked position ([35541f4](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/35541f46921b87de1df958a3acc774f1b77812b1))
+* add formationRows, formationCols, and swarmStepSize variables for grid formation configuration ([9f9e726](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/9f9e72634927f291cef2866dea8847f355f1c72c))
+* add gif ([f4418d9](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/f4418d943b9262666c06276f1d57125ae345a0f4))
+* add GridCoordinator for distributed swarm movement computation ([8937500](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/89375001d9bff8c3f206501a8cd26c6bb0ced868))
+* add gridDestination and moveTowards functions for grid-based sensor movement ([f07d3bb](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/f07d3bb13fc3d7fda9038661f0a8adea05b0bdaa))
+* add hasEnoughHistory function to validate zebra position history length ([dbecfa8](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/dbecfa88c4157641f3fefba9929c60b8f7fd17fc))
+* add hysteresis-based leader election strategies for improved stability ([f0e5eb0](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/f0e5eb0fccb0947fd0d666378823e136756e7575))
+* add latestContribution function and EstimationContribution data class for zebra position aggregation ([15d0ad5](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/15d0ad518d7851802fb683ac9bf19c2550fd30c2))
+* add movingSensorsLB experiment ([540f6fd](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/540f6fd441848d71215425f1c55c86120f6017b9))
+* add plotter for fig.1 in the paper ([96a3203](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/96a32030390216b1c1cd09626a752ccba8997581))
+* add plotter for fig.2 in the paper ([203e144](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/203e1442acc85891b603e05e65877c460ce5a214))
+* add plotter for fig.2 in the paper ([cb45603](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/cb45603e53d4a0168763e82892ed6c784aec3b8c))
+* add script to plot RMSE dependent to error on tracked position ([c424f79](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/c424f79f2b596dd9e73d576b1e1b4664a53c09a1))
+* add SensorNetwork class with network centroid and grid index calculations ([04c2455](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/04c2455c76752a4c9be9f77623e4a8d6cc66df79))
+* add support for dynamic positioning and step size in swarm movement ([4d12ca3](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/4d12ca3871e08efc8223c643f2dc2e5e63410c1b))
+* add utility for environment variables ([1e4176c](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/1e4176cd43968bbf83a5a5cd5d0f8542b7dce699))
+* enable kill leader in fixedSensorsLB ([ded4695](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/ded469573447bd1b737222501aaa659109e94d49))
+* enhance AggregateInformationAgent to include SwarmWarmupRounds and improve particle filter initialization ([1f62854](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/1f628540efec1c356b2b8cb8cb2241a16f79c891))
+* enhance grid coordination with leader-based targeting and centroid calculations ([db578d0](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/db578d02da4ea37f620113d49982d4fa9bb05636))
+* enhance particle filter initialization with configurable bounds and clamping option ([3c4e005](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/3c4e005f929beb8aee2bdf7c8bfbf54c8cfef870))
+* enhance sensor configuration with arbitrary variables for grid formation ([1a6a946](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/1a6a9466612859bb931ae129fea3303e72937b49))
+* enhance swarm movement logic with network centroid and warmup rounds ([552a85f](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/552a85fc27ad59a2ac981c59cb2e0ee7e3aa0caf))
+* implement local filtering and distributed movement for swarm sensors ([20e9c9e](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/20e9c9edadea9d1dd6781a20d0de713063374213))
+* marmellata for [@angelacorte](https://github.com/angelacorte) ([b85c17c](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/b85c17c64a5388020513ad4b4d28b5e51dbbdbcb))
+* refactor leader election strategy to use centroid-based identification and improve clarity ([9d27425](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/9d27425bf7b1b5f21a03df40984e800aecbcbe01))
+* refactor network centroid and grid index calculations for information leader ([153a2f4](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/153a2f44a8f41f72eb1d92e7d088edb4d1527768))
+* refactor network centroid calculation to use CentroidAccumulator for improved clarity ([4228838](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/42288385ab39c4a675a69c00a7afba48f01e1ce6))
+* simplify grid formation values retrieval in AggregateInformationAgent ([8ad5674](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/8ad567455d255572f68f9eb266e473643a28ac3a))
+* simplify sensor movement logic by removing centroid calculation ([65f3701](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/65f37016754e8150b8c863be264cf5002bc14940))
+* update AggregateInformationAgentLeaderBased to include electionBound parameter for leader election ([3cca13c](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/3cca13ce671e28d0d9ee407346da6c341378907d))
+* update computeDistributedSwarmMovement to accept CollektiveDevice and change bound type to Int ([f070778](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/f0707785c0f2ade0db73a32b58ca7556065da0fa))
+* update sensor configuration to use dynamic size calculation and streamline parameters ([d5f6df0](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/d5f6df0f92c289c5ec5b3e1e845a4c835f109dc9))
+* use distributed swarm movement computation with grid formation ([3bc1468](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/3bc146882646eaba4ccb4018f3503c55da260dac))
+
+### Bug Fixes
+
+* adapt to ktlint ([329a0e5](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/329a0e51b649b33983954eca92fbb5bb139bcaa6))
+* add kill leader event ([ea9a2fd](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/ea9a2fde565563b9d04be653f042b3d8f20150fc))
+* add max seed ([875abfc](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/875abfc81c7f9c66b623f741b22f9fe6bd5386ae))
+* add max seed ([0dc2864](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/0dc28644414cdff8a58fc0430b3e6e0918047af7))
+* add space in readme ([3552ff2](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/3552ff2e5642ced1f35b3516bf063e404fb6dcd8))
+* avoid useless share ([47c1c78](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/47c1c787887080f4e8caf72808888255aeb20168))
+* de-anonymize authors ([e7ddebd](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/e7ddebd3c1ca5318ae57961aa050a37ccfb02fb8))
+* default neighbors numbers ([1460ab5](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/1460ab5735404a57e70b1919be2d8dd5c7dfa09c))
+* fix docker username ([10c19cb](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/10c19cb8ccc7f3aa947e68252e4c966395b1f67c))
+* merge zebra histories without dropping new ids ([6cbd1af](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/6cbd1af1a414793466aef85da1cc307a8bb6ae9b))
+* remove moving sensors LB ([6e1a16e](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/6e1a16e21557def437a535f3987367f5e4316b38))
+* remove neighbors number from batch ([7868e5c](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/7868e5c67df370e1aaafb5cf464a4726716a27d2))
+* remove useless parameter ([329a03e](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/329a03e95a064e6107d93bbbb73fe17b4a7653ce))
+* remove useless suppression ([fb6fa29](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/fb6fa2969c8b577d84310873fa498dcc29f45418))
+* rename plotter ([a9a81a9](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/a9a81a92f09753bfed11517822cca71fa4c665b2))
+* take only filter nodes before checking for leader ([287fc3b](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/287fc3b3a37290b7959296508e0bf7f880b13152))
+* take zebras real path from yaml ([27a49cf](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/27a49cf73fa5288c60499489a9492e759edef576))
+* title and abstract ([c430ab1](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/c430ab1b00ee71c4bf479ec160d1ed32c4a4b0ee))
+* too generic exception ([a8adf0b](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/a8adf0b72bb8486e3990f2f9c9365be807a0b756))
+* typo in plotter name ([1d61450](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/1d61450b23ab29804ce6043d6a65233e096bcf5b))
+* update max seed ([6a9ff4a](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/6a9ff4a29dd58de27889b71d4b8114106752faa6))
+* update movingSensorsNB configuration ([fa4d5ff](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/fa4d5ff31e81c1b72ced2e72a08c3409dcbba685))
+
+### Documentation
+
+* add missing doc ([a3b9ab7](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/a3b9ab7a4a84d1bbbe1383f53afe83fc589fb54b))
+* add missing documentation ([70184f1](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/70184f1406cc2155433679c4313084f16f0d7bfc))
+
+### General maintenance
+
+* add zebras info table ([accdc46](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/accdc466cfbada2159c07b79be3739495d12abeb))
+* **artifact:** only one seed for brevity ([3184824](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/3184824d29638fe69375fba0702cf59a8a1d6161))
+* **artifact:** preprare plotter for fig. 4 ([1a5afcc](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/1a5afccf8efc82a53f60b1efc2ff51823a446513))
+* reduce number of seeds for artifact eval ([8431808](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/8431808ef43a1a283287139d603cd172fc74c5b5))
+* **release:** update gradle.properties .env versions to 1.0.1 [skip ci] ([f3f1a2b](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/f3f1a2b1f8e0deb4dfd9600f4c9ac34295dd74ca))
+* remove unused simulations ([8157063](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/81570631500bef07c0152a7c1ab62c6b2f553102))
+* upadte editor config to not ask newlines in when ([2e1d78d](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/2e1d78d2d7f3b750183ee14d3f2c3ce662726cc8))
+* update gitignore ([5eabea6](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/5eabea600b091f5ac2847304875ea12ab6b94c52))
+
+### Style improvements
+
+* adapt to ktlint ([c444b58](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/c444b5877addf609e68972f56194bb3500667cfc))
+* adapt to ktlint ([b87867f](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/b87867fc0448b76804a9dcabfa320191567aa369))
+* minors ([b6629da](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/b6629dabd4de373a949e14433a84932c4bbd1108))
+* minors in long if statement ([4c0d316](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/4c0d31699b1708a6152e60fbeb2e09dbf5e2ca90))
+
+### Refactoring
+
+* add ErrorOnDesiredPosition parameter to formation configuration ([1b2d530](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/1b2d530a4e60be4ba737cbde561d564a9f9feea0))
+* centralize particle filter construction ([b145b6a](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/b145b6a340cabdb281f9a747e47841134e46f872))
+* clarify bounded election helper name ([5bfeded](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/5bfededde3c6cd2d7448f2de8cd0547a4e080a65))
+* file pattern to include errorOnPosition ([c9b3357](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/c9b335715f6cdd6f49e61182c4e29c2f700bc72d))
+* remove unused functions ([eecd7fa](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/eecd7fabaa1620d8ac2a0667f5f7d77f0db9c4b6))
+* removing unnecessary device context parameter ([d2ec088](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/d2ec0884fe50c154700025a8a7b9a4c3914c9a61))
+* rename bounded election helper ([9a26d6f](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/9a26d6f0e7c9cf97c78625f12a0bc38206dc44d1))
+* rename plotter ([f26bda5](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/f26bda54943dded07a658680a299be1cb5359001))
+* restore ParticleInitializationArea data class and adjust initialization logic ([273e4bb](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/273e4bb905cbe45846adea32c09bf975185540b7))
+* restrict centroid helper visibility ([c9762ad](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/c9762ad0ae2b3dc86f3210c36e7d69b9a3529be6))
+* reuse centroid for coordinator election ([3b5bffa](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/3b5bffab96cc437a418c2f9f049e02150eeec254))
+* reuse shared particle filter configuration ([0444c02](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/0444c0202e55ff23632d310ce99f4e9e26312fcb))
+* simplify getNextPosition logic and variable names in MoveSensorsInSwarm ([04b5e38](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/04b5e38ee1c72b585dc12ab56e65f3af64378840))
+* simplify output directory creation and improve CSV filename formatting ([7cb30f7](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/7cb30f7b7bb7b2d2e6a4d36045a889141fc0ca30))
+* simplify swarm movement logic and enhance grid index calculations ([bbff0f0](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/bbff0f0d54e95bf45dd7ba701de1ff3edd675aae))
+* update CentroidAccumulator to use Point and simplify networkCentroid logic ([40d9953](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/40d995331df52a1911e5cc2e905bcba165ef753e))
+* update network centroid logic and improve sensor location handling ([e762925](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/e762925b4987937c45373f4f7e936fe986c57629))
+
 ## [1.0.1](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/compare/1.0.0...1.0.1) (2026-04-14)
 
 ### Bug Fixes
