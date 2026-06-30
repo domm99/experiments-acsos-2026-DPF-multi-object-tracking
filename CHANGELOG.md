@@ -1,3 +1,17 @@
+## [2.0.0](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/compare/1.1.1...2.0.0) (2026-06-30)
+
+### ⚠ BREAKING CHANGES
+
+* upadate simulation parameters
+
+### Features
+
+* upadate simulation parameters ([efffd91](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/efffd91dc78421a2af1e56bce4123d26a9c7bd23))
+
+### General maintenance
+
+* **release:** update gradle.properties .env versions to 1.1.1 [skip ci] ([889f512](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/commit/889f5121bb3d252c0a34593e7b19c29ddb4c7e2c))
+
 ## [1.1.1](https://github.com/domm99/experiments-acsos-2026-DPF-multi-object-tracking/compare/1.1.0...1.1.1) (2026-06-29)
 
 ### Bug Fixes
