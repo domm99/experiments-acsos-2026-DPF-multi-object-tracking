@@ -22,7 +22,7 @@ variables:
     parameters: [7 , [7] ]
   errorOnDesiredPosition: &errorOnDesiredPosition
     type: ArbitraryVariable
-    parameters: [0.0 , [0.0, 50.0, 100.0, 150.0, 200.0, 250.0, 300.0] ]
+    parameters: [0.0 , [0.0, 50.0, 100.0, 150.0, 200.0, 250.0, 300] ]
   gridCenterX: &gridCenterX
     type: ArbitraryVariable
     parameters: [0.0 , [0.0] ]
