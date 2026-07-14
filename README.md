@@ -2,6 +2,9 @@
 
 This artifact is associated with the regular paper article submitted in the Main Track of the ACSOS 2026 conference.
 
+[Zenodo repository](https://zenodo.org/records/21063216).
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21063216)](https://doi.org/10.5281/zenodo.21063216)
+
 ### Authors
 
 | **Angela Cortecchia** (*)  | **Davide Domini** (*)  | **Giovanni Ciatto**(*)   | **Roberto Casadei**(*) | **Mirko Viroli** (*)  |
